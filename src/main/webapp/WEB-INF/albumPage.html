@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" th:href="@{/css/style.css}">
+<link rel="stylesheet" th:href="@{/css/header.css}">
+<link rel="stylesheet" th:href="@{/css/album.css}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+	href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap"
+	rel="stylesheet">
+<title>Album Page</title>
+</head>
+<body>
+	<div class="header">
+		<div class="headerLeft">
+			<a href="Home">Image Gallery</a> <a th:href="@{/CreateAlbum}">Create
+				Album</a> <a th:href="@{/UploadImage}">Upload Image</a>
+		</div>
+		<div class="headerRight">
+			<span th:text="${session.user.username}"></span> <a
+				th:href="@{/Logout}">Logout</a>
+		</div>
+	</div>
+	<div class="content">
+		<form th:action="@{/AlbumPage}" method="get">
+			<div class="albums">
+				<a id="left" th:if="${leftButton}"
+					th:href="@{/AlbumPage(album=${album}, page=${page - 1})}">&lsaquo;</a>
+				<a th:each="image : ${albumImages}"
+					th:href="@{/ImageDetails(image=${image.getId()}, album=${album}, page=${page})}">
+					<div class="albumImage">
+						<img th:alt="${image.getTitle()}"
+							th:src="@{${'/ImageStreamer?image=' + image.getPath()}}">
+						<div class="imageTitle" th:text="${image.getTitle()}"></div>
+					</div>
+				</a> <a id="right" th:if="${rightButton}"
+					th:href="@{/AlbumPage(album=${album}, page=${page + 1})}">&rsaquo;</a>
+				<input type="hidden" name="album" th:value="${album}"> <input
+					type="hidden" name="page" th:value="${page}">
+			</div>
+		</form>
+	</div>
+</body>
+</html>

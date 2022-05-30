@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" th:href="@{/css/style.css}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+	href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap"
+	rel="stylesheet">
+<title>Upload an image</title>
+</head>
+<body>
+	<form th:action="@{/UploadImage}" method="post"
+		enctype="multipart/form-data">
+		<input type="text" name="ImageTitle" placeholder="Image title"
+			minlength="4" maxlength="50" /><br>
+		<textarea name="ImageDescription" rows="4" cols="50"></textarea>
+		<br> <input type="file" name="newImage"><br>
+		<div class="errorMsg" th:if="${errorMsg!=null}" th:text="${errorMsg}"></div>
+		<div class="successMsg" th:if="${successMsg!=null}"
+			th:text="${successMsg}"></div>
+		<input type="submit" value="Submit"> <br> <a class="link"
+			href="Home">Home</a>
+	</form>
+</body>
+</html>

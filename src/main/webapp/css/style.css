@@ -1,0 +1,87 @@
+@charset "ISO-8859-1";
+
+body {
+	font-family: 'Roboto', sans-serif;
+	margin: 0;
+}
+
+.title {
+	font-size: 3em;
+	font-weight: bold;
+	margin: 15px 0;
+}
+
+.sub-title {
+	font-size: 1.5em;
+	margin: 10px 0;
+}
+
+.errorMsg, .successMsg {
+	font-weight: bold;
+}
+
+.errorMsg {
+	color: red;
+}
+
+.successMsg {
+	color: limegreen;
+}
+
+input[type=text], input[type=password], input[type=email] {
+	padding: 10px;
+	margin: 10px;
+	border-radius: 5px;
+	border: 1px solid #555;
+	font-size: 1em;
+	box-sizing: border-box;
+}
+
+.loginContainer {
+	text-align: center;
+	margin: 50px auto;
+	background-color: white;
+	padding: 10px;
+	border-radius: 10px;
+	width: 75%;
+	min-width: 150px;
+	width: 75%;
+	min-width: 150px;
+	max-width: 400px;
+}
+
+.loginContainer input[type=text], .loginContainer input[type=password],
+	.loginContainer input[type=email] {
+	width: 100%;
+	margin: 10px 0 !important;
+	box-sizing: border-box;
+}
+
+.loginContainer h1 {
+	margin-bottom: 20px;
+}
+
+input[type=submit], button[type=submit] {
+	font-family: 'Roboto', sans-serif;
+	border: none;
+	font-size: 1em;
+	color: white;
+	background-color: #26f;
+	box-sizing: border-box;
+	padding: 10px;
+	border-radius: 5px;
+	margin: 15px;
+	transition: background-color 0.1s;
+	cursor: pointer;
+}
+
+input[type=submit]:hover, button[type=submit]:hover {
+	background-color: #15e;
+}
+
+.link {
+	text-decoration: none;
+	color: #0af;
+	text-decoration: none;
+	font-weight: bold;
+}

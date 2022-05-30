@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" th:href="@{/css/style.css}">
+<link rel="stylesheet" th:href="@{/css/header.css}">
+<link rel="stylesheet" th:href="@{/css/home.css}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+	href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap"
+	rel="stylesheet">
+<title>Image Gallery</title>
+</head>
+<body>
+	<div class="header">
+		<div class="headerLeft">
+			<a href="Home">Image Gallery</a> <a th:href="@{/CreateAlbum}">Create
+				Album</a> <a th:href="@{/UploadImage}">Upload Image</a>
+		</div>
+		<div class="headerRight">
+			<span th:text="${session.user.username}"></span> <a
+				th:href="@{/Logout}">Logout</a>
+		</div>
+	</div>
+	<div class="content">
+		<div class="errorMsg" th:if="${errorMsg!=null}" th:text="${errorMsg}"></div>
+		<div class="successMsg" th:if="${successMsg!=null}"
+			th:text="${successMsg}"></div>
+		<div class="section">
+			<div class="sectionTItle">Your Albums</div>
+			<div th:each="album : ${myAlbumList}" class="albumTab">
+				<a th:href="@{/AlbumPage(album=${album.getId()}, page=0)}">
+					<div class="albumTitle" th:text="${album.getTitle()}"></div>
+					<div class="albumDate" th:text="${album.getDate()}"></div>
+				</a>
+			</div>
+
+		</div>
+		<div class="section">
+			<div class="sectionTItle">Other People's Albums</div>
+			<div th:each="album : ${otherAlbumList}" class="albumTab">
+				<a th:href="@{/AlbumPage(album=${album.getId()}, page=0)}">
+					<div class="albumTitle" th:text="${album.getTitle()}"></div>
+					<div class="albumDate" th:text="${album.getDate()}"></div>
+				</a>
+			</div>
+
+		</div>
+	</div>
+</body>
+</html>

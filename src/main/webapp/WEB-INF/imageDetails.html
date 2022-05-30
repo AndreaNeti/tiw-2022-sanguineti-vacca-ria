@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" th:href="@{/css/style.css}">
+<link rel="stylesheet" th:href="@{/css/header.css}">
+<link rel="stylesheet" th:href="@{/css/details.css}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+	href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap"
+	rel="stylesheet">
+<title>Image Page</title>
+</head>
+<body>
+	<div class="header">
+		<div class="headerLeft">
+			<a href="Home">Image Gallery</a> <a th:href="@{/CreateAlbum}">Create
+				Album</a> <a th:href="@{/UploadImage}">Upload Image</a> <a
+				th:href="@{/AlbumPage(album=${album}, page=${page})}">Return to
+				album</a>
+		</div>
+		<div class="headerRight">
+			<span th:text="${session.user.username}"></span> <a
+				th:href="@{/Logout}">Logout</a>
+		</div>
+	</div>
+	<div class="content">
+		<div class="imageDetails">
+			<div class="imageTitle" th:text="${image.getTitle()}"></div>
+			<img th:alt="${image.getTitle()}"
+				th:src="@{${'/ImageStreamer?image=' + image.getPath()}}"></a>
+			<div class="subContent">
+				<div class="imageDate"
+					th:text="${#dates.format(image.getDate(), 'dd-MMM-yyyy')}"></div>
+				<div class="imageDescription">
+					<span>Description:</span><br> <span
+						th:text="${image.getDescription()}"></span>
+				</div>
+				<div class="commentContainer">
+					<div class="comment" th:each="comment : ${commentList}">
+						<div class="commentDate"
+							th:text="${#dates.format(comment.getDate(), 'dd-MMM-yyyy')}"></div>
+						<div class="commentNickname" th:text="${comment.getNickname()}"></div>
+						<div class="commentText" th:text="${comment.getComment()}"></div>
+					</div>
+				</div>
+				<form th:action="@{/ImageDetails#commentBox}" method="post">
+					<textarea id="commentBox" name="comment" rows="4" cols="50"
+						placeholder="Leave your comment here"></textarea>
+					<br> <input type="hidden" name="image"
+						th:value="${image.getId()}"><input type="hidden"
+						name="album" th:value="${album}"><input type="hidden"
+						name="page" th:value="${page}"> <input type="submit"
+						value="Submit">
+				</form>
+				<div class="errorMsg" th:if="${errorMsg!=null}"
+					th:text="${errorMsg}"></div>
+				<div class="successMsg" th:if="${successMsg!=null}"
+					th:text="${successMsg}"></div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
