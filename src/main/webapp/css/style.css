@@ -16,15 +16,15 @@ body {
 	margin: 10px 0;
 }
 
-.errorMsg, .successMsg {
+#errorMsg, #successMsg {
 	font-weight: bold;
 }
 
-.errorMsg {
+#errorMsg {
 	color: red;
 }
 
-.successMsg {
+#successMsg {
 	color: limegreen;
 }
 
@@ -61,7 +61,7 @@ input[type=text], input[type=password], input[type=email] {
 	margin-bottom: 20px;
 }
 
-input[type=submit], button[type=submit] {
+input[type=button], button[type=button] {
 	font-family: 'Roboto', sans-serif;
 	border: none;
 	font-size: 1em;
@@ -75,7 +75,7 @@ input[type=submit], button[type=submit] {
 	cursor: pointer;
 }
 
-input[type=submit]:hover, button[type=submit]:hover {
+input[type=button]:hover, button[type=button]:hover {
 	background-color: #15e;
 }
 
