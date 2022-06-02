@@ -68,7 +68,7 @@ public class Login extends HttpServlet {
 
 			if (user == null) {
 				errorMsg = Messages.WRONG_CREDENTIALS;
-				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			} else {
 				request.getSession().setAttribute("user", user);
 

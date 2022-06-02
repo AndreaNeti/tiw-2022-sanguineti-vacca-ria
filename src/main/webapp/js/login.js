@@ -7,9 +7,10 @@
 		if (form.checkValidity()) {
 			makeCall("POST", "Login", form,
 				function success(message) {
-					sessionStorage.setItem('username', message);
+					window.sessionStorage.setItem('username', message);
 					window.location.href = "home.html";
-				}, function error(message) {
+				},
+				function error(message) {
 					document.getElementById("errorMsg").textContent = message;
 				}
 			);

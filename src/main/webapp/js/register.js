@@ -40,8 +40,10 @@
 			} else { // OK
 				makeCall("POST", 'Register', form,
 					function success(message) {
+						alert("Successfully registered");
 						window.location.href = "login.html";
-					}, function error(message) {
+					},
+					function error(message) {
 						errorMsg.textContent = message;
 					});
 			}
