@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -14,21 +14,16 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.apache.commons.validator.routines.EmailValidator;
-import org.thymeleaf.TemplateEngine;
-import org.thymeleaf.context.WebContext;
-import org.thymeleaf.templatemode.TemplateMode;
-import org.thymeleaf.templateresolver.ServletContextTemplateResolver;
 
 import it.polimi.tiw.daos.UserDAO;
 import it.polimi.tiw.utils.ConnectionHandler;
 import it.polimi.tiw.utils.Messages;
-import it.polimi.tiw.utils.Utils;
 
 @WebServlet("/Register")
+@MultipartConfig
 public class Register extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private Connection connection = null;
-	private TemplateEngine templateEngine;
 
 	public Register() {
 		super();
@@ -36,12 +31,6 @@ public class Register extends HttpServlet {
 
 	public void init() throws ServletException {
 		connection = ConnectionHandler.getConnection(getServletContext());
-		ServletContext servletContext = getServletContext();
-		ServletContextTemplateResolver templateResolver = new ServletContextTemplateResolver(servletContext);
-		templateResolver.setTemplateMode(TemplateMode.HTML);
-		this.templateEngine = new TemplateEngine();
-		this.templateEngine.setTemplateResolver(templateResolver);
-		templateResolver.setSuffix(".html");
 	}
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -88,36 +77,29 @@ public class Register extends HttpServlet {
 				// violated unique attribute
 				if (e.getErrorCode() == 1062) {
 					errorMsg = Messages.USERNAME_TAKEN;
+					response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 				} else {
 					e.printStackTrace();
-					response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Impossible to register");
+					response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+					response.getWriter().println("Impossible to register");
 					return;
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
-				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Impossible to register");
+				response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+				response.getWriter().println("Impossible to register");
 				return;
 			}
 			// success
 			if (errorMsg == null) {
-				String newPath = getServletContext().getContextPath() + "/Login?username=" + usrn;
-				newPath = Utils.attachSuccessToPath(newPath, Messages.USER_REGISTERED);
-				response.sendRedirect(newPath);
+				response.setStatus(HttpServletResponse.SC_OK);
+				response.getWriter().println(usrn);
+				return;
 			}
+		} else {
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 		}
-		String newPath = getServletContext().getContextPath() + "/Register";
-		newPath = Utils.attachErrorToPath(newPath, errorMsg);
-		response.sendRedirect(newPath);
-
-	}
-
-	@Override
-	protected void doGet(HttpServletRequest request, HttpServletResponse response)
-			throws ServletException, IOException {
-		ServletContext servletContext = getServletContext();
-		final WebContext ctx = new WebContext(request, response, servletContext, request.getLocale());
-		Utils.setMessages(request, ctx);
-		templateEngine.process("WEB-INF/register.html", ctx, response.getWriter());
+		response.getWriter().println(errorMsg.toString());
 	}
 
 	@Override

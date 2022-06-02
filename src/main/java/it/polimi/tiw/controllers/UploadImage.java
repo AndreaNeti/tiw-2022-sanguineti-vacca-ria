@@ -8,6 +8,7 @@ import java.util.List;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -29,6 +30,7 @@ import it.polimi.tiw.utils.Messages;
 import it.polimi.tiw.utils.Utils;
 
 @WebServlet("/UploadImage")
+@MultipartConfig
 public class UploadImage extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private static final long MAX_FILE_SIZE = 10000000;
