@@ -3,17 +3,13 @@ package it.polimi.tiw.controllers;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -34,11 +30,13 @@ public class GetAlbums extends HttpServlet {
 		super();
 	}
 
+	@Override
 	public void init() throws ServletException {
 		connection = ConnectionHandler.getConnection(getServletContext());
 	}
 
-	protected void doPost(HttpServletRequest request, HttpServletResponse response)
+	@Override
+	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		// If the user is not logged in (not present in session) redirect to the login
 		User me = Utils.checkUserSession(request, response);
@@ -47,17 +45,16 @@ public class GetAlbums extends HttpServlet {
 			return;
 
 		AlbumDAO albumDao = new AlbumDAO(connection);
-		Map<Integer, List<Album>> albums = new HashMap<>();
+		AlbumsResponse albums = null;
 		try {
-			albums.put(0, albumDao.getMyAlbums(me));
-			albums.put(1, albumDao.getOtherAlbums(me));
+			albums = new AlbumsResponse(albumDao.getMyAlbums(me), albumDao.getOtherAlbums(me));
 		} catch (SQLException e) {
 			e.printStackTrace();
 			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			response.getWriter().println("Impossible to query DB");
 			return;
 		}
-		Gson gson = new GsonBuilder().setDateFormat("yyyy MM dd").create();
+		Gson gson = new GsonBuilder().setDateFormat("dd/MM/yyyy").create();
 		String json = gson.toJson(albums);
 		response.setStatus(HttpServletResponse.SC_OK);
 		response.setContentType("application/json");
@@ -73,4 +70,7 @@ public class GetAlbums extends HttpServlet {
 			e.printStackTrace();
 		}
 	}
+
+	private record AlbumsResponse(List<Album> myAlbums, List<Album> otherAlbums) {
+	};
 }

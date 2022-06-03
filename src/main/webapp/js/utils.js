@@ -11,10 +11,10 @@ function makeCall(method, url, formElement, successCback, errorCback, reset = tr
 				case 200:
 					successCback(message);
 					break;
-				case 401: //unauthorized
+				case 401, 403: //unauthorized or forbidden
 					window.location.href = "login.html";
 					break;
-				case 400, 401, 500: // bad request, server error
+				case 400, 500: // bad request, server error
 					errorCback(message);
 					break;
 			}

@@ -79,7 +79,7 @@ public class CreateAlbum extends HttpServlet {
 
 		if (errorMsg != null) {
 			String path = getServletContext().getContextPath() + "/CreateAlbum";
-			path = Utils.attachErrorToPath(path, errorMsg);
+			//path = Utils.attachErrorToPath(path, errorMsg);
 			response.sendRedirect(path);
 			return;
 		} else {
@@ -113,8 +113,8 @@ public class CreateAlbum extends HttpServlet {
 				}
 			}
 			String path = getServletContext().getContextPath() + "/Home";
-			path = Utils.attachErrorToPath(path, errorMsg);
-			path = Utils.attachSuccessToPath(path, successMsg);
+			//path = Utils.attachErrorToPath(path, errorMsg);
+			//path = Utils.attachSuccessToPath(path, successMsg);
 			response.sendRedirect(path);
 		}
 
@@ -138,7 +138,7 @@ public class CreateAlbum extends HttpServlet {
 			e.printStackTrace();
 			return;
 		}
-		Utils.setMessages(request, ctx);
+		//Utils.setMessages(request, ctx);
 		templateEngine.process("WEB-INF/createAlbum.html", ctx, response.getWriter());
 	}
 

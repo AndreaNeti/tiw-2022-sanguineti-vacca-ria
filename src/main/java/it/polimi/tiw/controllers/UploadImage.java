@@ -123,7 +123,7 @@ public class UploadImage extends HttpServlet {
 				}
 				Messages successMsg = Messages.IMAGE_UPLOADED;
 				String path = getServletContext().getContextPath() + "/Home";
-				path = Utils.attachSuccessToPath(path, successMsg);
+				//path = Utils.attachSuccessToPath(path, successMsg);
 				response.sendRedirect(path);
 				return;
 			}

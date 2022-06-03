@@ -5,7 +5,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
@@ -15,10 +14,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
-import org.thymeleaf.TemplateEngine;
-import org.thymeleaf.context.WebContext;
-import org.thymeleaf.templatemode.TemplateMode;
-import org.thymeleaf.templateresolver.ServletContextTemplateResolver;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import it.polimi.tiw.beans.Image;
 import it.polimi.tiw.beans.User;
@@ -32,7 +30,6 @@ import it.polimi.tiw.utils.Utils;
 public class AlbumPage extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private Connection connection = null;
-	private TemplateEngine templateEngine;
 
 	public AlbumPage() {
 		super();
@@ -41,12 +38,6 @@ public class AlbumPage extends HttpServlet {
 	@Override
 	public void init() throws ServletException {
 		connection = ConnectionHandler.getConnection(getServletContext());
-		ServletContext servletContext = getServletContext();
-		ServletContextTemplateResolver templateResolver = new ServletContextTemplateResolver(servletContext);
-		templateResolver.setTemplateMode(TemplateMode.HTML);
-		this.templateEngine = new TemplateEngine();
-		this.templateEngine.setTemplateResolver(templateResolver);
-		templateResolver.setSuffix(".html");
 	}
 
 	@Override
@@ -59,57 +50,49 @@ public class AlbumPage extends HttpServlet {
 			return;
 		Messages errorMsg = null;
 		String albumIdString = StringEscapeUtils.escapeJava(request.getParameter("album"));
-		String pageIdString = StringEscapeUtils.escapeJava(request.getParameter("page"));
-		if (!StringUtils.isNumeric(albumIdString) || !StringUtils.isNumeric(pageIdString)) {
-			errorMsg = Messages.INVALID_ALBUM;
+		if (!StringUtils.isNumeric(albumIdString)) {
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			response.getWriter().println(Messages.INVALID_ALBUM.toString());
+			return;
 		}
 		int albumId = Integer.parseInt(albumIdString);
-		int page = Integer.parseInt(pageIdString);
 
 		ImageDAO imageDao = new ImageDAO(connection);
 		List<Image> images;
 		try {
 			images = imageDao.getAlbumImages(albumId);
 		} catch (SQLException e) {
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Impossible to query DB");
 			e.printStackTrace();
+			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			response.getWriter().println("Impossible to query DB");
 			return;
 		}
-		if (images.size() == 0) {
+		if (images.size() == 0)
 			errorMsg = Messages.INVALID_ALBUM;
-		} else if (page * 5 > images.size() || page < 0) {
-			errorMsg = Messages.INVALID_ALBUMPAGE;
-		}
-		
+
 		if (errorMsg != null) {
-			String path = getServletContext().getContextPath() + "/Home";
-			path = Utils.attachErrorToPath(path, errorMsg);
-			response.sendRedirect(path);
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			response.getWriter().println(errorMsg.toString());
 			return;
 		}
-
-		int fromIndex = page * 5;
-		int toIndex = Math.min(page * 5 + 5, images.size());
-		boolean rightButton = toIndex < images.size();
-		boolean leftButton = fromIndex > 0;
-		images = images.subList(fromIndex, toIndex);
-
-		ServletContext servletContext = getServletContext();
-		final WebContext ctx = new WebContext(request, response, servletContext, request.getLocale());
-
-		ctx.setVariable("albumImages", images);
-		ctx.setVariable("album", albumId);
-		ctx.setVariable("page", page);
-		ctx.setVariable("rightButton", rightButton);
-		ctx.setVariable("leftButton", leftButton);
-		Utils.setMessages(request, ctx);
-		templateEngine.process("WEB-INF/albumPage.html", ctx, response.getWriter());
-	}
-
-	@Override
-	protected void doPost(HttpServletRequest request, HttpServletResponse response)
-			throws ServletException, IOException {
-		doGet(request, response);
+		Gson gson = new GsonBuilder().setDateFormat("dd/MM/yyyy").create();
+		String json = gson.toJson(images);
+		response.setStatus(HttpServletResponse.SC_OK);
+		response.setContentType("application/json");
+		response.setCharacterEncoding("UTF-8");
+		response.getWriter().write(json);
+		/*
+		 * int fromIndex = page * 5; int toIndex = Math.min(page * 5 + 5,
+		 * images.size()); boolean rightButton = toIndex < images.size(); boolean
+		 * leftButton = fromIndex > 0; images = images.subList(fromIndex, toIndex);
+		 * 
+		 * ServletContext servletContext = getServletContext(); final WebContext ctx =
+		 * new WebContext(request, response, servletContext, request.getLocale());
+		 * 
+		 * ctx.setVariable("albumImages", images); ctx.setVariable("album", albumId);
+		 * ctx.setVariable("page", page); ctx.setVariable("rightButton", rightButton);
+		 * ctx.setVariable("leftButton", leftButton);
+		 */
 	}
 
 	@Override

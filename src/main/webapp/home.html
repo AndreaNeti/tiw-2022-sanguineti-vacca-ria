@@ -28,27 +28,6 @@
 	</div>
 	<div id="errorMsg"></div>
 	<div id="successMsg"></div>
-	<div class="content">
-		<div class="section" id="yourAlbums">
-			<div class="sectionTItle">Your Albums</div>
-			<div each="album : ${myAlbumList}" class="albumTab">
-				<a href="@{/AlbumPage(album=${album.getId()}, page=0)}">
-					<div class="albumTitle"></div>
-					<div class="albumDate"></div>
-				</a>
-			</div>
-
-		</div>
-		<div class="section" id="otherAlbums">
-			<div class="sectionTItle">Other People's Albums</div>
-			<div each="album : ${otherAlbumList}" class="albumTab">
-				<a href="@{/AlbumPage(album=${album.getId()}, page=0)}">
-					<div class="albumTitle"></div>
-					<div class="albumDate"></div>
-				</a>
-			</div>
-
-		</div>
-	</div>
+	<div id="content"></div>
 </body>
 </html>

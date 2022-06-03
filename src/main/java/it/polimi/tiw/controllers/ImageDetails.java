@@ -68,7 +68,7 @@ public class ImageDetails extends HttpServlet {
 				|| !StringUtils.isNumeric(pageIdString)) {
 			errorMsg = Messages.INVALID_ID;
 			String path = getServletContext().getContextPath() + "/Home";
-			path = Utils.attachErrorToPath(path, errorMsg);
+			//path = Utils.attachErrorToPath(path, errorMsg);
 			response.sendRedirect(path);
 			return;
 		}
@@ -88,7 +88,7 @@ public class ImageDetails extends HttpServlet {
 					errorMsg = Messages.INVALID_ID;
 					String path = getServletContext().getContextPath() + "/AlbumPage?album=" + albumID + "&page="
 							+ pageID;
-					path = Utils.attachErrorToPath(path, errorMsg);
+					//path = Utils.attachErrorToPath(path, errorMsg);
 					response.sendRedirect(path);
 					return;
 				}
@@ -101,8 +101,8 @@ public class ImageDetails extends HttpServlet {
 		}
 		String path = getServletContext().getContextPath() + "/ImageDetails?album=" + albumID + "&page=" + pageID
 				+ "&image=" + imageID;
-		path = Utils.attachErrorToPath(path, errorMsg);
-		path = Utils.attachSuccessToPath(path, successMsg);
+		//path = Utils.attachErrorToPath(path, errorMsg);
+		//path = Utils.attachSuccessToPath(path, successMsg);
 		response.sendRedirect(path);
 	}
 
@@ -120,7 +120,7 @@ public class ImageDetails extends HttpServlet {
 		if (!StringUtils.isNumeric(imageIdString) || !StringUtils.isNumeric(albumIdString)
 				|| !StringUtils.isNumeric(pageIdString)) {
 			String path = getServletContext().getContextPath() + "/Home";
-			path = Utils.attachErrorToPath(path, Messages.INVALID_ID);
+			//path = Utils.attachErrorToPath(path, Messages.INVALID_ID);
 			response.sendRedirect(path);
 			return;
 		}
@@ -135,7 +135,7 @@ public class ImageDetails extends HttpServlet {
 				// to avoid forward loop
 				// forward back to album page
 				String path = getServletContext().getContextPath() + "/AlbumPage?album=" + albumID + "&page=" + pageID;
-				path = Utils.attachErrorToPath(path, Messages.INVALID_ID);
+				//path = Utils.attachErrorToPath(path, Messages.INVALID_ID);
 				response.sendRedirect(path);
 				return;
 			}
@@ -144,7 +144,7 @@ public class ImageDetails extends HttpServlet {
 			e.printStackTrace();
 			return;
 		}
-		Utils.setMessages(request, ctx);
+		//Utils.setMessages(request, ctx);
 		templateEngine.process("WEB-INF/imageDetails.html", ctx, response.getWriter());
 	}
 

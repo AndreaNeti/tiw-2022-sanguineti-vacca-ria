@@ -26,23 +26,19 @@
 		</div>
 	</div>
 	<div class="content">
-		<form th:action="@{/AlbumPage}" method="get">
-			<div class="albums">
-				<a id="left" th:if="${leftButton}"
-					th:href="@{/AlbumPage(album=${album}, page=${page - 1})}">&lsaquo;</a>
-				<a th:each="image : ${albumImages}"
-					th:href="@{/ImageDetails(image=${image.getId()}, album=${album}, page=${page})}">
-					<div class="albumImage">
-						<img th:alt="${image.getTitle()}"
-							th:src="@{${'/ImageStreamer?image=' + image.getPath()}}">
-						<div class="imageTitle" th:text="${image.getTitle()}"></div>
-					</div>
-				</a> <a id="right" th:if="${rightButton}"
-					th:href="@{/AlbumPage(album=${album}, page=${page + 1})}">&rsaquo;</a>
-				<input type="hidden" name="album" th:value="${album}"> <input
-					type="hidden" name="page" th:value="${page}">
-			</div>
-		</form>
+		<div class="images">
+			<a id="left" th:if="${leftButton}"
+				th:href="@{/AlbumPage(album=${album}, page=${page - 1})}">&lsaquo;</a>
+			<a th:each="image : ${albumImages}"
+				th:href="@{/ImageDetails(image=${image.getId()}, album=${album}, page=${page})}">
+				<div class="thumbnail">
+					<img th:alt="${image.getTitle()}"
+						th:src="@{${'/ImageStreamer?image=' + image.getPath()}}">
+					<div class="imageTitle" th:text="${image.getTitle()}"></div>
+				</div>
+			</a> <a id="right" th:if="${rightButton}"
+				th:href="@{/AlbumPage(album=${album}, page=${page + 1})}">&rsaquo;</a>
+		</div>
 	</div>
 </body>
 </html>
