@@ -316,8 +316,33 @@
 			let submit = document.createElement("input");
 			submit.type = "button";
 			submit.value = "Submit";
-			submit.addEventListener("click", _ => {
-
+			submit.addEventListener("click", (e) => {
+				let form = e.target.closest("form");
+				let textArea = form.elements["comment"];
+				let commentText = textArea.value;
+				if (form.checkValidity()) {
+					if (isBlank(commentText)) {
+						errorMsg.textContent = "Missing or blank comment";
+					} else {
+						// 
+						makeCall("POST", "ImageDetails", form,
+							function success() {
+								let comment = {
+									nickname: sessionStorage.getItem('username'),
+									date: new Date().toLocaleDateString('en-GB'),
+									comment: commentText
+								};
+								addComment(comment);
+								textArea.scrollIntoView();
+							}, function error() {
+								errorMsg.textContent = message;
+							});
+					}
+				}
+				else {
+					errorMsg.textContent = "Missing parameters";
+					form.reportValidity();
+				}
 			})
 			form.appendChild(submit);
 

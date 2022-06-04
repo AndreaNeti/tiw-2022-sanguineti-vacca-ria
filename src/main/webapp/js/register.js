@@ -6,7 +6,7 @@
 		var form = e.target.closest("form");
 		var errorMsg = document.getElementById("errorMsg");
 		if (form.checkValidity()) {
-			var inputs = form.elements;
+			let inputs = form.elements;
 			let username = inputs["username"];
 			let email = inputs["email"];
 			let pwd = inputs["pwd"];
