@@ -21,6 +21,9 @@ import org.thymeleaf.context.WebContext;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.ServletContextTemplateResolver;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import it.polimi.tiw.beans.Image;
 import it.polimi.tiw.beans.User;
 import it.polimi.tiw.daos.AlbumDAO;
@@ -34,7 +37,6 @@ import it.polimi.tiw.utils.Utils;
 public class CreateAlbum extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private Connection connection = null;
-	private TemplateEngine templateEngine;
 
 	public CreateAlbum() {
 		super();
@@ -42,12 +44,6 @@ public class CreateAlbum extends HttpServlet {
 
 	public void init() throws ServletException {
 		connection = ConnectionHandler.getConnection(getServletContext());
-		ServletContext servletContext = getServletContext();
-		ServletContextTemplateResolver templateResolver = new ServletContextTemplateResolver(servletContext);
-		templateResolver.setTemplateMode(TemplateMode.HTML);
-		this.templateEngine = new TemplateEngine();
-		this.templateEngine.setTemplateResolver(templateResolver);
-		templateResolver.setSuffix(".html");
 	}
 
 	@Override
@@ -62,62 +58,65 @@ public class CreateAlbum extends HttpServlet {
 		Messages successMsg = null;
 		List<Integer> selectedImageIds = new ArrayList<Integer>();
 		String albumName = StringEscapeUtils.escapeJava(request.getParameter("AlbumTitle"));
-		if (StringUtils.isBlank(albumName))
-			errorMsg = Messages.EMPTY_ALBUMNAME;
-		else {
-			albumName = StringUtils.strip(albumName);
-			if (!StringUtils.isAlphanumericSpace(albumName))
-				errorMsg = Messages.ALPHANUMERIC_ALBUMNAME;
-			else if (albumName.length() < 4)
-				errorMsg = Messages.MIN_ALBUMNAME;
-			else if (albumName.length() > 50)
-				errorMsg = Messages.MAX_ALBUMNAME;
+		if (StringUtils.isBlank(albumName)) {
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			response.getWriter().println(Messages.EMPTY_ALBUMNAME.toString());
+			return;
+		}
+		albumName = StringUtils.strip(albumName);
+		if (!StringUtils.isAlphanumericSpace(albumName)) {
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			response.getWriter().println(Messages.ALPHANUMERIC_ALBUMNAME.toString());
+			return;
+		} else if (albumName.length() < 4) {
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			response.getWriter().println(Messages.MIN_ALBUMNAME.toString());
+			return;
+		} else if (albumName.length() > 50) {
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			response.getWriter().println(Messages.MAX_ALBUMNAME.toString());
+			return;
 		}
 		String[] imageIds = request.getParameterValues("image");
-		if (imageIds == null || imageIds.length == 0)
-			errorMsg = Messages.EMPTY_ALBUM;
-
-		if (errorMsg != null) {
-			String path = getServletContext().getContextPath() + "/CreateAlbum";
-			//path = Utils.attachErrorToPath(path, errorMsg);
-			response.sendRedirect(path);
+		if (imageIds == null || imageIds.length == 0) {
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			response.getWriter().println(Messages.EMPTY_ALBUM.toString());
 			return;
-		} else {
-			for (String s : imageIds) {
-				if (!StringUtils.isNumeric(s)) {
-					errorMsg = Messages.INVALID_ID;
-					break;
-				}
-				selectedImageIds.add(Integer.parseInt(StringEscapeUtils.escapeJava(s)));
-			}
-			if (errorMsg == null) {
-				AlbumDAO albumDao = new AlbumDAO(connection);
-				try {
-					albumDao.newAlbum(albumName, me, selectedImageIds);
-					successMsg = Messages.ALBUM_CREATED;
-				} catch (SQLException e) {
-					e.printStackTrace();
-					try {
-						connection.rollback();
-					} catch (SQLException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
-					// SQLException --> foreign key constraint violation
-					if (e.getErrorCode() == 1452) {
-						errorMsg = Messages.INVALID_ID;
-					} else {
-						response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Impossible to create album");
-						return;
-					}
-				}
-			}
-			String path = getServletContext().getContextPath() + "/Home";
-			//path = Utils.attachErrorToPath(path, errorMsg);
-			//path = Utils.attachSuccessToPath(path, successMsg);
-			response.sendRedirect(path);
 		}
-
+		// Selected images parse
+		for (String s : imageIds) {
+			if (!StringUtils.isNumeric(s)) {
+				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				response.getWriter().println(Messages.INVALID_ID.toString());
+				return;
+			}
+			selectedImageIds.add(Integer.parseInt(StringEscapeUtils.escapeJava(s)));
+		}
+		AlbumDAO albumDao = new AlbumDAO(connection);
+		try {
+			albumDao.newAlbum(albumName, me, selectedImageIds);
+		} catch (SQLException e) {
+			e.printStackTrace();
+			try {
+				connection.rollback();
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				response.getWriter().println("Impossible to query DB");
+				return;
+			}
+			// SQLException --> foreign key constraint violation
+			if (e.getErrorCode() == 1452) {
+				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				response.getWriter().println(Messages.INVALID_ID.toString());
+			} else {
+				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				response.getWriter().println("Impossible to query DB");
+			}
+			return;
+		}
+		response.setStatus(HttpServletResponse.SC_OK);
+		response.getWriter().println(Messages.ALBUM_CREATED.toString());
 	}
 
 	@Override
@@ -129,17 +128,22 @@ public class CreateAlbum extends HttpServlet {
 		if (me == null)
 			return;
 
-		ServletContext servletContext = getServletContext();
-		final WebContext ctx = new WebContext(request, response, servletContext, request.getLocale());
+		ImageDAO imageDAO = new ImageDAO(connection);
+		List<Image> myImages;
 		try {
-			update(me, ctx);
+			myImages = imageDAO.getMyImages(me);
 		} catch (SQLException e) {
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Impossible to query DB");
 			e.printStackTrace();
+			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			response.getWriter().println("Impossible to query DB");
 			return;
 		}
-		//Utils.setMessages(request, ctx);
-		templateEngine.process("WEB-INF/createAlbum.html", ctx, response.getWriter());
+		Gson gson = new GsonBuilder().setDateFormat("dd/MM/yyyy").create();
+		String json = gson.toJson(myImages);
+		response.setStatus(HttpServletResponse.SC_OK);
+		response.setContentType("application/json");
+		response.setCharacterEncoding("UTF-8");
+		response.getWriter().write(json);
 	}
 
 	@Override
@@ -149,14 +153,5 @@ public class CreateAlbum extends HttpServlet {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-	}
-
-	private void update(User me, WebContext ctx) throws SQLException {
-		ImageDAO imageDAO = new ImageDAO(connection);
-		List<Image> myImages;
-		myImages = imageDAO.getMyImages(me);
-		if (myImages.isEmpty())
-			ctx.setVariable("errorMsg", Messages.EMPTY_IMAGES.toString());
-		ctx.setVariable("myImages", myImages);
 	}
 }
