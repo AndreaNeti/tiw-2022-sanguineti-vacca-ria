@@ -54,8 +54,6 @@ public class CreateAlbum extends HttpServlet {
 		// not logged
 		if (me == null)
 			return;
-		Messages errorMsg = null;
-		Messages successMsg = null;
 		List<Integer> selectedImageIds = new ArrayList<Integer>();
 		String albumName = StringEscapeUtils.escapeJava(request.getParameter("AlbumTitle"));
 		if (StringUtils.isBlank(albumName)) {
