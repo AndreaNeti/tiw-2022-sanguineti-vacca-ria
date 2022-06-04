@@ -61,7 +61,7 @@ input[type=text], input[type=password], input[type=email] {
 	margin-bottom: 20px;
 }
 
-input[type=button], button[type=button] {
+input[type=button] {
 	font-family: 'Roboto', sans-serif;
 	border: none;
 	font-size: 1em;
@@ -70,12 +70,12 @@ input[type=button], button[type=button] {
 	box-sizing: border-box;
 	padding: 10px;
 	border-radius: 5px;
-	margin: 15px;
+	margin: 10px 0;
 	transition: background-color 0.1s;
 	cursor: pointer;
 }
 
-input[type=button]:hover, button[type=button]:hover {
+input[type=button]:hover {
 	background-color: #15e;
 }
 

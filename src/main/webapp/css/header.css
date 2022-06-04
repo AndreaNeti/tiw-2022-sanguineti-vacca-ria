@@ -12,19 +12,23 @@
 	z-index: 1;
 }
 
-.header a {
+.header a, .header span {
 	text-decoration: none;
 	color: white;
 	padding: 10px;
 }
 
-.header a:first-child {
+.headerLeft span {
+	cursor: pointer;
+}
+
+.headerLeft span:first-child {
 	font-weight: bold;
 	border-right: 2px solid white;
 	padding-right: 20px;
 }
 
-.header a:nth-child(2) {
+.header span:nth-child(2) {
 	padding-left: 20px;
 }
 

@@ -21,10 +21,19 @@
 			errorMsg = document.getElementById("errorMsg");
 			successMsg = document.getElementById("successMsg");
 			content = document.getElementById("content");
-			document.getElementById("username").textContent = sessionStorage.getItem('username');
-			document.querySelector("a[href='Logout']").addEventListener('click', () => {
+			document.getElementById("Username").textContent = sessionStorage.getItem('username');
+			document.getElementById("Logout").addEventListener('click', _ => {
 				window.sessionStorage.removeItem('username');
-			})
+			});
+			document.getElementById("Home").addEventListener('click', _ => {
+				this.changePage(new AlbumList(this.changePage));
+			});
+			document.getElementById("CreateAlbum").addEventListener('click', _ => {
+				// this.changePage();
+			});
+			document.getElementById("UploadImage").addEventListener('click', _ => {
+				// this.changePage();
+			});
 		};
 
 		this.reset = function() {
@@ -73,8 +82,8 @@
 				albumTab.appendChild(albumTitle);
 				albumTab.appendChild(albumDate);
 
-				albumTab.addEventListener("click", (event) => {
-					self.changePage(new AlbumDetails(self.changePage, album.id));
+				albumTab.addEventListener("click", _ => {
+					self.changePage(new AlbumDetails(album.id));
 				});
 
 				container.appendChild(albumTab);
@@ -115,114 +124,266 @@
 		}
 	}
 
-	function AlbumDetails(_changePage, _idAlbum) {
-		this.changePage = _changePage;
+	function AlbumDetails(_idAlbum) {
 		this.idAlbum = _idAlbum;
-		var page;
-		var images;
-		var htmlThumbnails = [];
-		var leftButton, rightButton;
-		var self = this;
+		let page;
+		let images;
+		let htmlThumbnails = [];
+		let imagesContainer, leftButton, rightButton, modal;
 
 		this.start = function() {
-			var self = this;
+			let self = this;
 			makeCall("GET", "AlbumPage?album=" + self.idAlbum, null,
 				function success(message) {
 					images = JSON.parse(message);
-					self.update();
+					self.initialize();
+					self.update(0);
 				},
 				function error(message) {
 					errorMsg.textContent = message;
 				});
 		}
 
-		this.update = function() {
+		this.update = function(newPage) {
+			// null or empty image list
 			if (!images || images.length === 0) {
 				errorMsg.textContent = "No images found";
 				return;
 			}
+			if (newPage === page) return;
+			if (newPage < 0) {
+				errorMsg.textContent = "Invalid page ID";
+				// TODO go back to home ?
+				return;
+			}
+			if (leftButton) {
+				if (newPage > 0) // there is a previous page
+					leftButton.style.visibility = "visible";
+				else
+					leftButton.style.visibility = "hidden";
+			}
+			if (rightButton) {
+				if ((newPage + 1) * 5 < images.length) // there is a next page
+					rightButton.style.visibility = "visible";
+				else
+					rightButton.style.visibility = "hidden";
+			}
+			// prefetch new images and create html tags
+			if ((newPage + 1) * 5 >= htmlThumbnails.length) {
+				// create next page images but keep old ones
+				for (let i = (newPage + 1) * 5; i < images.length && i < (newPage + 2) * 5; i++) {
+					appendImage(i);
+				}
+			}
+			// make old page images not visible
+			for (let i = page * 5; i < images.length && i < (page + 1) * 5; i++)
+				htmlThumbnails[i].style.display = "none";
+			// make new page images visible
+			for (let i = newPage * 5; i < images.length && i < (newPage + 1) * 5; i++)
+				htmlThumbnails[i].style.display = "block";
+
+			page = newPage;
+		}
+		this.initialize = function() {
 			// called for first time, create html structure
 			if (htmlThumbnails.length === 0) {
-				page = 0;
+				modal = new ImageDetails();
 				// create images container
-				var imagesContainer = document.createElement("div");
+				imagesContainer = document.createElement("div");
 				imagesContainer.classList.add("thumbnails");
 				// create left button and set its listener (only if album has more than 5 images)
 				if (images.length > 5) {
 					leftButton = document.createElement("div");
 					leftButton.id = "left";
 					leftButton.textContent = "‹";
-					leftButton.addEventListener("click", (event) => {
-						changePage(page - 1);
+					leftButton.addEventListener("click", _ => {
+						this.update(page - 1);
 					});
 					// in page 0 left button is always invisible
 					leftButton.style.visibility = "hidden";
 					imagesContainer.appendChild(leftButton);
 				}
-				// create images 
-				for (let i = 0; i < images.length && i < 5; i++) {
-					// create image container
-					var thumbnail = document.createElement("div");
-					thumbnail.classList.add("thumbnail");
-					// create image and set attributes
-					var img = document.createElement("img");
-					img.setAttribute("alt", images[i].title);
-					img.setAttribute("src", "ImageStreamer?image=" + images[i].path);
-					// create image title div
-					var imageTitle = document.createElement("div");
-					imageTitle.classList.add("imageTitle");
-					imageTitle.textContent = images[i].title;
-
-					thumbnail.appendChild(img);
-					thumbnail.appendChild(imageTitle);
-					htmlThumbnails[i] = thumbnail;
-					imagesContainer.appendChild(thumbnail);
-				}
-				// append images container to content
-				content.appendChild(imagesContainer);
 				// create right button and set its listener (only if album has more than 5 images)
 				if (images.length > 5) {
 					rightButton = document.createElement("div");
 					rightButton.id = "right";
 					rightButton.textContent = "›";
-					rightButton.addEventListener("click", (event) => {
-						changePage(page + 1);
+					rightButton.addEventListener("click", _ => {
+						this.update(page + 1);
 					});
 					imagesContainer.appendChild(rightButton);
 					// if album has more than 5 images, right button is visible (in page 0)
 				}
-			} else {
-				if (leftButton) {
-					if (page > 0) // there is a previous page
-						leftButton.style.visibility = "visible";
-					else
-						leftButton.style.visibility = "hidden";
+				// at start creates 10 images
+				for (let i = 0; i < images.length && i < 10; i++) {
+					appendImage(i);
 				}
-				if (rightButton) {
-					if (page * 5 + 5 < images.length) // there is a next page
-						rightButton.style.visibility = "visible";
-					else
-						rightButton.style.visibility = "hidden";
-				}
-				// if html tags are already created, update attributes
-				var thumbnailIndex = 0;
-				for (let i = page * 5; i < images.length && thumbnailIndex < 5; i++, thumbnailIndex++) {
-					htmlThumbnails[thumbnailIndex].style.visibility = "visible";
-					htmlThumbnails[thumbnailIndex].querySelectorAll(':scope > img')[0].setAttribute("alt", images[i].title);
-					htmlThumbnails[thumbnailIndex].querySelectorAll(':scope > img')[0].setAttribute("src", "ImageStreamer?image=" + images[i].path);
-					htmlThumbnails[thumbnailIndex].querySelectorAll(':scope > .imageTitle')[0].textContent = images[i].title;
-				}
-				// hide old images if this page has less than 5 images
-				for (; thumbnailIndex < 5; thumbnailIndex++) {
-					htmlThumbnails[thumbnailIndex].style.visibility = "hidden";
-				}
+				// append images container to content
+				content.appendChild(imagesContainer);
+
+				// create and append modal window
+
 			}
 		}
-		var changePage = function(newPage) {
-			if (newPage >= 0) {
-				page = newPage;
-				self.update();
-			}
+		let appendImage = function(imageIndex) {
+			if (images.length < imageIndex) return;
+			// create image container
+			let thumbnail = document.createElement("div");
+			thumbnail.classList.add("thumbnail");
+			// create image and set attributes
+			let img = document.createElement("img");
+			img.setAttribute("alt", images[imageIndex].title);
+			img.setAttribute("src", "ThumbnailStreamer?image=" + images[imageIndex].path);
+			// create image title div
+			let thumbnailTitle = document.createElement("div");
+			thumbnailTitle.classList.add("thumbnailTitle");
+			thumbnailTitle.textContent = images[imageIndex].title;
+
+			thumbnail.appendChild(img);
+			thumbnail.appendChild(thumbnailTitle);
+			thumbnail.style.display = "none";
+			thumbnail.addEventListener("click", _ => {
+				modal.show(images[imageIndex]);
+			})
+			htmlThumbnails[imageIndex] = thumbnail;
+			imagesContainer.appendChild(thumbnail);
+		}
+	}
+
+	function ImageDetails() {
+		let imageTitle, img, imageDate, imageDescription, commentsContainer, imageId, modal;
+
+		this.initialize = function() {
+			// create modal div
+			modal = document.createElement("div");
+			modal.classList.add("modal");
+
+			// create imageDetails container
+			let imageDetails = document.createElement("div");
+			imageDetails.classList.add("imageDetails");
+
+			// create close button
+			let close = document.createElement("div");
+			close.classList.add("closeModal");
+			close.textContent = "✕";
+			close.addEventListener("click", _ => {
+				this.close();
+			})
+			imageDetails.appendChild(close);
+			// create image title div
+			imageTitle = document.createElement("div");
+			imageTitle.classList.add("imageTitle");
+			imageDetails.appendChild(imageTitle);
+			// create img tag
+			img = document.createElement("img");
+			imageDetails.appendChild(img);
+			// create subContent container
+			let subContent = document.createElement("div");
+			subContent.classList.add("subContent");
+			// create image date div
+			imageDate = document.createElement("div");
+			imageDate.classList.add("imageDate");
+			subContent.appendChild(imageDate);
+			// create image description div
+			imageDescription = document.createElement("div");
+			imageDescription.classList.add("imageDescription");
+			subContent.appendChild(imageDescription);
+			// create comments container (empty)
+			commentsContainer = document.createElement("div");
+			commentsContainer.classList.add("commentsContainer");
+			subContent.appendChild(commentsContainer);
+
+			// create form
+			let form = document.createElement("form");
+			form.action = "#";
+			// create textArea
+			let textArea = document.createElement("textarea");
+			textArea.id = "commentBox";
+			textArea.name = "comment";
+			textArea.rows = "4";
+			textArea.cols = "50";
+			textArea.placeholder = "Leave your comment here";
+			form.appendChild(textArea);
+			// create image id hidden input
+			imageId = document.createElement("input");
+			imageId.type = "hidden";
+			imageId.name = "image";
+			form.appendChild(imageId);
+			// br
+			let br = document.createElement("br");
+			form.appendChild(br);
+			// create submit button
+			let submit = document.createElement("input");
+			submit.type = "button";
+			submit.value = "Submit";
+			submit.addEventListener("click", _ => {
+
+			})
+			form.appendChild(submit);
+
+			subContent.appendChild(form);
+
+			imageDetails.appendChild(subContent);
+			modal.style.display = "none";
+			content.appendChild(modal);
+
+			modal.appendChild(imageDetails);
+		}
+
+		this.show = function(image) {
+			// never called before, create all html
+			if (!modal) this.initialize();
+			modal.style.display = "block";
+			imageTitle.textContent = image.title;
+			img.alt = image.title;
+			img.src = "ImageStreamer?image=" + image.path;
+			imageDate.textContent = image.date;
+			imageDescription.textContent = image.description;
+			imageId.value = image.id;
+			makeCall("GET", "ImageDetails?image=" + image.id, null,
+				function success(message) {
+					comments = JSON.parse(message);
+					comments.forEach(function(comment) {
+						addComment(comment);
+					});
+				},
+				function error(message) {
+					errorMsg.textContent = message;
+				});
+		}
+
+		this.close = function() {
+			modal.style.display = "none";
+			imageTitle.textContent = "";
+			img.src = "";
+			img.alt = "";
+			imageDate.textContent = "";
+			imageDescription.textContent = "";
+			imageId.value = "";
+			commentsContainer.textContent = "";
+		}
+
+		let addComment = function(comment) {
+			// create comment container
+			let commentDiv = document.createElement("div");
+			commentDiv.classList.add("comment");
+			// create comment date div
+			let commentDate = document.createElement("div");
+			commentDate.classList.add("commentDate");
+			commentDate.textContent = comment.date;
+			commentDiv.appendChild(commentDate);
+			// create comment nickName div
+			let commentNickname = document.createElement("div");
+			commentNickname.classList.add("commentNickname");
+			commentNickname.textContent = comment.nickname;
+			commentDiv.appendChild(commentNickname);
+			// create comment text div
+			let commentText = document.createElement("div");
+			commentText.classList.add("commentText");
+			commentText.textContent = comment.comment;
+			commentDiv.appendChild(commentText);
+			// append to comments container
+			commentsContainer.appendChild(commentDiv);
 		}
 	}
 };

@@ -2,7 +2,7 @@
  * AJAX call management
  */
 
-function makeCall(method, url, formElement, successCback, errorCback, reset = true) {
+function makeCall(method, url, formElement, successCback, errorCback) {
 	var req = new XMLHttpRequest(); // visible by closure
 	req.onreadystatechange = function() {
 		if (req.readyState == XMLHttpRequest.DONE) {
@@ -26,7 +26,7 @@ function makeCall(method, url, formElement, successCback, errorCback, reset = tr
 	} else {
 		req.send(new FormData(formElement));
 	}
-	if (formElement !== null && reset === true) {
+	if (formElement !== null) {
 		formElement.reset();
 	}
 }
