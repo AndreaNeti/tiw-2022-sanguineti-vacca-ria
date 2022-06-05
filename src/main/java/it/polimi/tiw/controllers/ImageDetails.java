@@ -43,12 +43,13 @@ public class ImageDetails extends HttpServlet {
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
+		request.setCharacterEncoding("UTF-8");
 		// If the user is not logged in (not present in session) redirect to the login
 		User me = Utils.checkUserSession(request, response);
 		// not logged
 		if (me == null)
 			return;
-		String comment = StringEscapeUtils.escapeJava(request.getParameter("comment"));
+		String comment = StringEscapeUtils.escapeHtml4(request.getParameter("comment"));
 		String imageIdString = StringEscapeUtils.escapeJava(request.getParameter("image"));
 		if (!StringUtils.isNumeric(imageIdString)) {
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);

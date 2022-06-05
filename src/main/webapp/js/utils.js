@@ -35,3 +35,8 @@ function makeCall(method, url, formElement, successCback, errorCback) {
 function isBlank(str) {
 	return (!str || /^\s*$/.test(str));
 }
+function decodeHtml(html) {
+    var txt = document.createElement("textarea");
+    txt.innerHTML = html;
+    return txt.value;
+}

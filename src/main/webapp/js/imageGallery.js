@@ -405,7 +405,7 @@
 			// create comment text div
 			let commentText = document.createElement("div");
 			commentText.classList.add("commentText");
-			commentText.textContent = comment.comment;
+			commentText.textContent = decodeHtml(comment.comment);
 			commentDiv.appendChild(commentText);
 			// append to comments container
 			commentsContainer.appendChild(commentDiv);

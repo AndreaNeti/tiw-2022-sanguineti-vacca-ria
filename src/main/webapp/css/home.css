@@ -105,6 +105,10 @@ a {
 	margin-bottom: 5px;
 }
 
+.commentText {
+	white-space: pre-line;
+}
+
 #commentBox {
 	font-family: inherit;
 	font-size: inherit;
