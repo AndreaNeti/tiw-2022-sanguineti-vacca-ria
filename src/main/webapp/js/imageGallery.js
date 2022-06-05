@@ -254,6 +254,7 @@
 		let imageTitle, img, imageDate, imageDescription, commentsContainer, imageId, modal;
 
 		this.initialize = function() {
+			var self = this;
 			// create modal div
 			modal = document.createElement("div");
 			modal.classList.add("modal");
@@ -261,7 +262,11 @@
 			// create imageDetails container
 			let imageDetails = document.createElement("div");
 			imageDetails.classList.add("imageDetails");
-
+			modal.addEventListener('click', function(e) {
+				if (!imageDetails.contains(e.target)) {
+					self.close();
+				}
+			});
 			// create close button
 			let close = document.createElement("div");
 			close.classList.add("closeModal");
