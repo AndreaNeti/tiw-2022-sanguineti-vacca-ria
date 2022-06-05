@@ -85,3 +85,23 @@ input[type=button]:hover {
 	text-decoration: none;
 	font-weight: bold;
 }
+
+/* scrollbar */
+::-webkit-scrollbar {
+	width: 10px;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+	border-radius: 5px;
+	background: #777;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+	background: #666;
+}
+
+::-webkit-scrollbar-thumb:active {
+	background: #555;
+}
