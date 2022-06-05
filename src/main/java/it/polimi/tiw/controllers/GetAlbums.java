@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
@@ -18,7 +19,6 @@ import it.polimi.tiw.beans.Album;
 import it.polimi.tiw.beans.User;
 import it.polimi.tiw.daos.AlbumDAO;
 import it.polimi.tiw.utils.ConnectionHandler;
-import it.polimi.tiw.utils.Utils;
 
 @WebServlet("/GetAlbums")
 @MultipartConfig
@@ -38,12 +38,7 @@ public class GetAlbums extends HttpServlet {
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		// If the user is not logged in (not present in session) redirect to the login
-		User me = Utils.checkUserSession(request, response);
-		// not logged
-		if (me == null)
-			return;
-
+		User me = (User) request.getSession().getAttribute("user");
 		AlbumDAO albumDao = new AlbumDAO(connection);
 		AlbumsResponse albums = null;
 		try {

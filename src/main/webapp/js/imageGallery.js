@@ -363,7 +363,7 @@
 			img.alt = image.title;
 			img.src = "ImageStreamer?image=" + image.path;
 			imageDate.textContent = image.date;
-			imageDescription.textContent = image.description;
+			imageDescription.textContent = decodeHtml(image.description);
 			imageId.value = image.id;
 			makeCall("GET", "ImageDetails?image=" + image.id, null,
 				function success(message) {

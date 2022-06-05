@@ -21,8 +21,6 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.ServletContextTemplateResolver;
 
-import it.polimi.tiw.beans.User;
-
 @WebServlet("/ImageStreamer")
 @MultipartConfig
 public class ImageStreamer extends HttpServlet {
@@ -52,13 +50,6 @@ public class ImageStreamer extends HttpServlet {
 
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-		// If the user is not logged in (not present in session) redirect to the login
-		User me = Utils.checkUserSession(request, response);
-		// not logged
-		if (me == null)
-			return;
-
-		// user is logged, stream the requested image
 		String imageName = StringEscapeUtils.escapeJava(request.getParameter("image"));
 
 		// checks if is a valid name file

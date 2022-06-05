@@ -25,7 +25,6 @@ import it.polimi.tiw.daos.AlbumDAO;
 import it.polimi.tiw.daos.ImageDAO;
 import it.polimi.tiw.utils.ConnectionHandler;
 import it.polimi.tiw.utils.Messages;
-import it.polimi.tiw.utils.Utils;
 
 @WebServlet("/CreateAlbum")
 @MultipartConfig
@@ -44,11 +43,7 @@ public class CreateAlbum extends HttpServlet {
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		// If the user is not logged in (not present in session) redirect to the login
-		User me = Utils.checkUserSession(request, response);
-		// not logged
-		if (me == null)
-			return;
+		User me = (User) request.getSession().getAttribute("user");
 		List<Integer> selectedImageIds = new ArrayList<Integer>();
 		String albumName = StringEscapeUtils.escapeJava(request.getParameter("AlbumTitle"));
 		if (StringUtils.isBlank(albumName)) {
@@ -115,12 +110,7 @@ public class CreateAlbum extends HttpServlet {
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		// If the user is not logged in (not present in session) redirect to the login
-		User me = Utils.checkUserSession(request, response);
-		// not logged
-		if (me == null)
-			return;
-
+		User me = (User) request.getSession().getAttribute("user");
 		ImageDAO imageDAO = new ImageDAO(connection);
 		List<Image> myImages;
 		try {

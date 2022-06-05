@@ -13,7 +13,7 @@ function makeCall(method, url, formElement, successCback, errorCback) {
 					break;
 				case 401: //unauthorized
 				case 403: // forbidden
-					window.location.href = "login.html";
+					window.location.href = req.getResponseHeader("Location");
 					break;
 				case 400: // bad request
 				case 500: // server error
@@ -36,7 +36,7 @@ function isBlank(str) {
 	return (!str || /^\s*$/.test(str));
 }
 function decodeHtml(html) {
-    var txt = document.createElement("textarea");
-    txt.innerHTML = html;
-    return txt.value;
+	var txt = document.createElement("textarea");
+	txt.innerHTML = html;
+	return txt.value;
 }

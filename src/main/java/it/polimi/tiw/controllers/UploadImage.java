@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.tomcat.util.http.fileupload.FileItem;
 import org.apache.tomcat.util.http.fileupload.disk.DiskFileItemFactory;
 import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
@@ -57,11 +58,7 @@ public class UploadImage extends HttpServlet {
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		// If the user is not logged in (not present in session) redirect to the login
-		User me = Utils.checkUserSession(request, response);
-		// not logged
-		if (me == null)
-			return;
+		User me = (User) request.getSession().getAttribute("user");
 
 		ImageDAO imageDao = new ImageDAO(connection);
 		String imageTitle = null;
@@ -110,7 +107,7 @@ public class UploadImage extends HttpServlet {
 						if (s.equals("ImageTitle")) {
 							imageTitle = item.getString();
 						} else {
-							imageDescription = item.getString();
+							imageDescription = StringEscapeUtils.escapeHtml4(item.getString());
 						}
 					}
 				}
@@ -123,7 +120,7 @@ public class UploadImage extends HttpServlet {
 				}
 				Messages successMsg = Messages.IMAGE_UPLOADED;
 				String path = getServletContext().getContextPath() + "/Home";
-				//path = Utils.attachSuccessToPath(path, successMsg);
+				// path = Utils.attachSuccessToPath(path, successMsg);
 				response.sendRedirect(path);
 				return;
 			}
@@ -134,12 +131,6 @@ public class UploadImage extends HttpServlet {
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		// If the user is not logged in (not present in session) redirect to the login
-		User me = Utils.checkUserSession(request, response);
-		// not logged
-		if (me == null)
-			return;
-
 		String path = "/WEB-INF/uploadImage.html";
 		ServletContext servletContext = getServletContext();
 		final WebContext ctx = new WebContext(request, response, servletContext, request.getLocale());
