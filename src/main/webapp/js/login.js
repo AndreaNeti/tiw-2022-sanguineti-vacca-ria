@@ -2,6 +2,7 @@
  * Login management
  */
 (function() { // avoid variables ending up in the global scope
+	var alertMessage = new Message();
 	document.getElementById("login").addEventListener('click', (e) => {
 		var form = e.target.closest("form");
 		var errorMsg = document.getElementById("errorMsg");
@@ -12,11 +13,11 @@
 					window.location.href = "home.html";
 				},
 				function error(message) {
-					errorMsg.textContent = message;
+					alertMessage.show(message);
 				}
 			);
 		} else {
-			errorMsg.textContent = "Missing parameters";
+			alertMessage.show("Missing parameters");
 			form.reportValidity();
 		}
 	});

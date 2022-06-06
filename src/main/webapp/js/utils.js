@@ -42,3 +42,19 @@ function decodeHtml(html) {
 	txt.innerHTML = html;
 	return txt.value;
 }
+function Message() {
+	let errorMsg = document.getElementById("errorMsg");
+	let successMsg = document.getElementById("successMsg");
+	this.show = function(message, error = true) {
+		if (error) {			
+			errorMsg.classList.add("fade");
+			errorMsg.textContent = message;
+			setTimeout(function() {errorMsg.classList.remove("fade");}, 5000);
+		}
+		else {
+			successMsg.classList.add("fade");
+			successMsg.textContent = message;
+			setTimeout(function() {successMsg.classList.remove("fade");}, 5000);
+		}
+	}
+}

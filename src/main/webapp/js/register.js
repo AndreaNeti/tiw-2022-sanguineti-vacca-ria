@@ -2,6 +2,7 @@
  * Register management
  */
 (function() { // avoid variables ending up in the global scope
+	var alertMessage = new Message();
 	document.getElementById("register").addEventListener('click', (e) => {
 		var form = e.target.closest("form");
 		var errorMsg = document.getElementById("errorMsg");
@@ -13,27 +14,27 @@
 			let pwd2 = inputs["pwd2"];
 			if (isBlank(username.value) || username.value.length < 4 || username.value.length > 50) {
 				if (isBlank(username.value))
-					errorMsg.textContent = "Empty or missing username";
+					alertMessage.show("Empty or missing username");
 				else if (username.value.length < 4)
-					errorMsg.textContent = "Min username length is 4";
+					alertMessage.show("Min username length is 4");
 				else
-					errorMsg.textContent = "Max username length is 50";
+					alertMessage.show("Max username length is 50");
 				username.value = "";
 				username.focus();
 			} else if (isBlank(email.value) || !isEmailValid(email.value)) {
 				if (isBlank(email.value))
-					errorMsg.textContent = "Empty or missing email";
+					alertMessage.show("Empty or missing email");
 				else
-					errorMsg.textContent = "Not a valid email";
+					alertMessage.show("Not a valid email");
 				email.value = "";
 				email.focus();
 			} else if (isBlank(pwd.value) || isBlank(pwd2.value) || pwd.value.length < 4 || pwd.value != pwd2.value) {
 				if (isBlank(pwd.value) || isBlank(pwd2.value))
-					errorMsg.textContent = "Empty or missing password";
+					alertMessage.show("Empty or missing password");
 				else if (pwd.value.length < 4)
-					errorMsg.textContent = "Min password length is 4";
+					alertMessage.show("Min password length is 4");
 				else
-					errorMsg.textContent = "Passwords don't match";
+					alertMessage.show("Passwords don't match");
 				pwd.value = "";
 				pwd.focus();
 				pwd2.value = "";
@@ -44,11 +45,11 @@
 						window.location.href = "login.html";
 					},
 					function error(message) {
-						errorMsg.textContent = message;
+						alertMessage.show(message);
 					});
 			}
 		} else {
-			errorMsg.textContent = "Missing parameters";
+			alertMessage.show("Missing parameters");
 			form.reportValidity();
 		}
 	});

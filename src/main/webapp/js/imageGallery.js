@@ -2,56 +2,60 @@
  * Home management
  */
 { // avoid variables ending up in the global scope
-	let errorMsg, successMsg, content, modal;
+	let alertMessage, content, modal, pageOrchestrator;
 
 	window.addEventListener("load", () => {
 		if (window.sessionStorage.getItem("username") == null) {
 			window.location.href = "login.html";
 		} else {
-			let pageOrchestrator = new PageOrchestrator();
+			pageOrchestrator = new PageOrchestrator();
 			pageOrchestrator.start();
-			pageOrchestrator.changePage(new AlbumList(pageOrchestrator.changePage));
+			pageOrchestrator.changeView(new AlbumList(pageOrchestrator.changeView));
 		}
 	});
-
 	function PageOrchestrator() {
 		var self = this;
+		let albumList;
 
 		this.start = function() {
-			errorMsg = document.getElementById("errorMsg");
-			successMsg = document.getElementById("successMsg");
 			content = document.getElementById("content");
+			alertMessage = new Message();
 			modal = new Modal();
+			albumList = new AlbumList(this.changeView);
 			document.getElementById("Username").textContent = sessionStorage.getItem('username');
 			document.getElementById("Logout").addEventListener('click', _ => {
 				window.sessionStorage.removeItem('username');
 			});
 			document.getElementById("Home").addEventListener('click', _ => {
-				this.changePage(new AlbumList(this.changePage));
+				this.changeView(albumList);
 			});
 			document.getElementById("CreateAlbum").addEventListener('click', _ => {
-				this.changePage(new CreateAlbum(), false);
+				this.changeView(new CreateAlbum(), false);
 			});
 			document.getElementById("UploadImage").addEventListener('click', _ => {
-				// this.changePage();
+				// this.changeView();
 			});
 		};
 
 		this.reset = function() {
-			errorMsg.textContent = "";
-			successMsg.textContent = "";
 			content.textContent = "";
 		}
 
-		this.changePage = function(newPage, emptyContent = true) {
+		this.refresh = function() {
+			this.reset();
+			albumList.start();
+		}
+
+		this.changeView = function(newView, emptyContent = true) {
 			if (emptyContent)
 				self.reset();
-			newPage.start();
+			newView.start();
 		}
+
+
 	}
 
-	function AlbumList(_changePage) {
-		this.changePage = _changePage; // orchestrator changePage function
+	function AlbumList() {
 
 		this.start = function() {
 			var self = this;
@@ -60,12 +64,11 @@
 					self.update(JSON.parse(message));
 				},
 				function error(message) {
-					errorMsg.textContent = message;
+					alertMessage.show(message);
 				});
 		}
 
 		this.update = function(albums) {
-			var self = this;
 			var myAlbumList = albums.myAlbums;
 			var otherAlbumList = albums.otherAlbums;
 			var appendAlbum = function(album, container) {
@@ -85,7 +88,7 @@
 				albumTab.appendChild(albumDate);
 
 				albumTab.addEventListener("click", _ => {
-					self.changePage(new AlbumDetails(album.id));
+					pageOrchestrator.changeView(new AlbumDetails(album.id));
 				});
 
 				container.appendChild(albumTab);
@@ -139,19 +142,19 @@
 					self.update(0);
 				},
 				function error(message) {
-					errorMsg.textContent = message;
+					alertMessage.show(message);
 				});
 		}
 
 		this.update = function(newPage) {
 			// null or empty image list
 			if (!images || images.length === 0) {
-				errorMsg.textContent = "No images found";
+				alertMessage.show("No images found");
 				return;
 			}
 			if (newPage === page) return;
 			if (newPage < 0) {
-				errorMsg.textContent = "Invalid page ID";
+				alertMessage.show("Invalid page ID");
 				// TODO go back to home ?
 				return;
 			}
@@ -352,11 +355,13 @@
 				let commentText = textArea.value;
 				if (form.checkValidity()) {
 					if (isBlank(commentText)) {
-						errorMsg.textContent = "Missing or blank comment";
+						alertMessage.show("Missing or blank comment");
+						textArea.value = "";
+						textArea.focus();
 					} else {
 						// 
 						makeCall("POST", "ImageDetails", form,
-							function success() {
+							function success(message) {
 								let comment = {
 									nickname: sessionStorage.getItem('username'),
 									date: new Date().toLocaleDateString('en-GB'),
@@ -364,13 +369,14 @@
 								};
 								addComment(comment);
 								textArea.scrollIntoView();
-							}, function error() {
-								errorMsg.textContent = message;
+								alertMessage.show(message, false);
+							}, function error(message) {
+								alertMessage.show(message);
 							});
 					}
 				}
 				else {
-					errorMsg.textContent = "Missing parameters";
+					alertMessage.show("Missing parameters");
 					form.reportValidity();
 				}
 			})
@@ -397,7 +403,7 @@
 					});
 				},
 				function error(message) {
-					errorMsg.textContent = message;
+					alertMessage.show(message);
 				});
 			modal.show(imageDetails);
 		}
@@ -434,7 +440,7 @@
 					self.update(JSON.parse(message));
 				},
 				function error(message) {
-					errorMsg.textContent = message;
+					alertMessage.show(message);
 				});
 		}
 
@@ -463,11 +469,12 @@
 				var form = e.target.closest("form");
 				makeCall("POST", "CreateAlbum", form,
 					function success(message) {
-						successMsg.textContent = message;
+						alertMessage.show(message, false);
 						modal.close();
+						pageOrchestrator.refresh();
 					},
 					function error(message) {
-						errorMsg.textContent = message;
+						alertMessage.show(message);
 					});
 			})
 			formContainer.appendChild(submit);
