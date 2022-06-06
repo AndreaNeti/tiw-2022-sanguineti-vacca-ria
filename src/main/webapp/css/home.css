@@ -46,10 +46,6 @@ a {
 /* DETAILS.css */
 .imageDetails {
 	text-align: left;
-	margin: 0 auto;
-	width: min-content;
-	max-width: 100%;
-	z-index: 0;
 }
 
 .imageDetails img {
@@ -129,7 +125,6 @@ a {
 
 .imageSelection {
 	display: flex;
-	flex-direction: column;
 	align-items: center;
 	margin: 10px;
 }
@@ -137,12 +132,13 @@ a {
 .images img {
 	max-width: 350px;
 	border-radius: 5px;
-	margin: 10px 0;
+	margin: 10px;
 }
 
-.imageTitle {
+.createAlbumImageTitle {
 	font-weight: bold;
 	font-size: 1.25em;
+	margin: 0;
 }
 
 input[type=text] {
@@ -224,16 +220,18 @@ input[type=text] {
 	left: 0;
 	-webkit-backdrop-filter: blur(10px);
 	backdrop-filter: blur(10px);
-	background-color: rgba(0, 0, 0, 0.5)
+	background-color: rgba(0, 0, 0, 0.5);
+	z-index: 1;
 }
 
-.modal>.imageDetails {
+.modalContent {
 	max-width: calc(100% - 200px);
 	height: calc(100% - 200px);
-	margin-top: 100px;
+	margin: 100px auto 0 auto;
 	overflow-y: scroll;
 	background-color: white;
 	border-radius: 5px;
+	width: min-content;
 }
 
 .closeModal {
@@ -250,6 +248,7 @@ input[type=text] {
 	top: 80px;
 	left: calc(50% - 20px);
 	transition: background-color 0.1s;
+	z-index: 2;
 }
 
 .closeModal:hover {

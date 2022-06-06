@@ -2,7 +2,7 @@
  * Home management
  */
 { // avoid variables ending up in the global scope
-	let errorMsg, successMsg, content;
+	let errorMsg, successMsg, content, modal;
 
 	window.addEventListener("load", () => {
 		if (window.sessionStorage.getItem("username") == null) {
@@ -21,6 +21,7 @@
 			errorMsg = document.getElementById("errorMsg");
 			successMsg = document.getElementById("successMsg");
 			content = document.getElementById("content");
+			modal = new Modal();
 			document.getElementById("Username").textContent = sessionStorage.getItem('username');
 			document.getElementById("Logout").addEventListener('click', _ => {
 				window.sessionStorage.removeItem('username');
@@ -29,7 +30,7 @@
 				this.changePage(new AlbumList(this.changePage));
 			});
 			document.getElementById("CreateAlbum").addEventListener('click', _ => {
-				// this.changePage();
+				this.changePage(new CreateAlbum(), false);
 			});
 			document.getElementById("UploadImage").addEventListener('click', _ => {
 				// this.changePage();
@@ -42,8 +43,9 @@
 			content.textContent = "";
 		}
 
-		this.changePage = function(newPage) {
-			self.reset();
+		this.changePage = function(newPage, emptyContent = true) {
+			if (emptyContent)
+				self.reset();
 			newPage.start();
 		}
 	}
@@ -118,10 +120,6 @@
 			// append other albums container to content
 			content.appendChild(section);
 		}
-
-		this.registerEvents = function(orchestrator) {
-			// add listeners to albums
-		}
 	}
 
 	function AlbumDetails(_idAlbum) {
@@ -129,7 +127,7 @@
 		let page;
 		let images;
 		let htmlThumbnails = [];
-		let imagesContainer, leftButton, rightButton, modal;
+		let imagesContainer, leftButton, rightButton, imageDetails;
 
 		this.start = function() {
 			let self = this;
@@ -137,6 +135,7 @@
 				function success(message) {
 					images = JSON.parse(message);
 					self.initialize();
+					// show page 0
 					self.update(0);
 				},
 				function error(message) {
@@ -187,7 +186,7 @@
 		this.initialize = function() {
 			// called for first time, create html structure
 			if (htmlThumbnails.length === 0) {
-				modal = new ImageDetails();
+				imageDetails = new ImageDetails();
 				// create images container
 				imagesContainer = document.createElement("div");
 				imagesContainer.classList.add("thumbnails");
@@ -243,27 +242,27 @@
 			thumbnail.appendChild(thumbnailTitle);
 			thumbnail.style.display = "none";
 			thumbnail.addEventListener("click", _ => {
-				modal.show(images[imageIndex]);
+				imageDetails.show(images[imageIndex]);
 			})
 			htmlThumbnails[imageIndex] = thumbnail;
 			imagesContainer.appendChild(thumbnail);
 		}
 	}
-
-	function ImageDetails() {
-		let imageTitle, img, imageDate, imageDescription, commentsContainer, imageId, modal;
+	function Modal() {
+		let modal, modalContent;
 
 		this.initialize = function() {
 			var self = this;
 			// create modal div
 			modal = document.createElement("div");
 			modal.classList.add("modal");
-
-			// create imageDetails container
-			let imageDetails = document.createElement("div");
-			imageDetails.classList.add("imageDetails");
+			modal.style.display = "none";
+			// create modal conent container
+			modalContent = document.createElement("div");
+			modalContent.classList.add("modalContent");
+			// click out listener
 			modal.addEventListener('click', function(e) {
-				if (!imageDetails.contains(e.target)) {
+				if (!modalContent.contains(e.target)) {
 					self.close();
 				}
 			});
@@ -274,7 +273,32 @@
 			close.addEventListener("click", _ => {
 				this.close();
 			})
-			imageDetails.appendChild(close);
+			// append to modal
+			modal.appendChild(close);
+			modal.appendChild(modalContent);
+			document.body.appendChild(modal);
+		}
+
+		this.show = function(pageRoot) {
+			if (!modal) this.initialize();
+			modalContent.textContent = "";
+			modalContent.appendChild(pageRoot);
+			modal.style.display = "block";
+		}
+
+		this.close = function() {
+			modal.style.display = "none";
+			modalContent.textContent = "";
+		}
+	}
+	function ImageDetails() {
+		let imageDetails, imageTitle, img, imageDate, imageDescription, commentsContainer, imageId;
+
+		this.initialize = function() {
+			// create imageDetails container
+			imageDetails = document.createElement("div");
+			imageDetails.classList.add("imageDetails");
+
 			// create image title div
 			imageTitle = document.createElement("div");
 			imageTitle.classList.add("imageTitle");
@@ -321,6 +345,7 @@
 			let submit = document.createElement("input");
 			submit.type = "button";
 			submit.value = "Submit";
+			// add comment event
 			submit.addEventListener("click", (e) => {
 				let form = e.target.closest("form");
 				let textArea = form.elements["comment"];
@@ -354,16 +379,10 @@
 			subContent.appendChild(form);
 
 			imageDetails.appendChild(subContent);
-			modal.style.display = "none";
-			content.appendChild(modal);
-
-			modal.appendChild(imageDetails);
 		}
 
 		this.show = function(image) {
-			// never called before, create all html
-			if (!modal) this.initialize();
-			modal.style.display = "block";
+			if (!imageDetails) this.initialize();
 			imageTitle.textContent = image.title;
 			img.alt = image.title;
 			img.src = "ImageStreamer?image=" + image.path;
@@ -380,17 +399,7 @@
 				function error(message) {
 					errorMsg.textContent = message;
 				});
-		}
-
-		this.close = function() {
-			modal.style.display = "none";
-			imageTitle.textContent = "";
-			img.src = "";
-			img.alt = "";
-			imageDate.textContent = "";
-			imageDescription.textContent = "";
-			imageId.value = "";
-			commentsContainer.textContent = "";
+			modal.show(imageDetails);
 		}
 
 		let addComment = function(comment) {
@@ -414,6 +423,82 @@
 			commentDiv.appendChild(commentText);
 			// append to comments container
 			commentsContainer.appendChild(commentDiv);
+		}
+	}
+
+	function CreateAlbum() {
+		this.start = function() {
+			var self = this;
+			makeCall("GET", "CreateAlbum", null,
+				function success(message) {
+					self.update(JSON.parse(message));
+				},
+				function error(message) {
+					errorMsg.textContent = message;
+				});
+		}
+
+		this.update = function(images) {
+			// create form container
+			let formContainer = document.createElement("form");
+			formContainer.action = "#";
+			formContainer.style.textAlign = "center";
+			// create title
+			let title = document.createElement("div");
+			title.classList.add("title");
+			formContainer.appendChild(title);
+			// album title input
+			let albumTitleInput = document.createElement("input");
+			albumTitleInput.type = "text";
+			albumTitleInput.name = "AlbumTitle";
+			albumTitleInput.placeholder = "Album title";
+			albumTitleInput.minLength = "4";
+			albumTitleInput.maxLength = "50";
+			formContainer.appendChild(albumTitleInput);
+			// submit input
+			let submit = document.createElement("input");
+			submit.type = "button";
+			submit.value = "Create Album";
+			submit.addEventListener("click", (e) => {
+				var form = e.target.closest("form");
+				makeCall("POST", "CreateAlbum", form,
+					function success(message) {
+						successMsg.textContent = message;
+						modal.close();
+					},
+					function error(message) {
+						errorMsg.textContent = message;
+					});
+			})
+			formContainer.appendChild(submit);
+			// images div container
+			let imagesContainer = document.createElement("div");
+			imagesContainer.classList.add("images");
+			formContainer.appendChild(imagesContainer);
+			images.forEach(function(image) {
+				let imageSelection = document.createElement("div");
+				imageSelection.classList.add("imageSelection");
+				let checkBox = document.createElement("input");
+				checkBox.type = "checkbox";
+				checkBox.name = "image";
+				checkBox.value = image.id;
+				imageSelection.appendChild(checkBox);
+				// img div
+				let img = document.createElement("img");
+				img.alt = img.title;
+				img.src = "ThumbnailStreamer?image=" + image.path;
+				imageSelection.appendChild(img);
+				// image title
+				let imgTitle = document.createElement("div");
+				imgTitle.classList.add("createAlbumImageTitle");
+				imgTitle.textContent = decodeHtml(image.title);
+				imageSelection.appendChild(imgTitle);
+
+				imagesContainer.appendChild(imageSelection);
+			});
+			formContainer.appendChild(imagesContainer);
+			// open form container into a modal
+			modal.show(formContainer);
 		}
 	}
 };

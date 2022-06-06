@@ -33,9 +33,11 @@ function makeCall(method, url, formElement, successCback, errorCback) {
 	}
 }
 function isBlank(str) {
+	// check if null or empty or only spaces
 	return (!str || /^\s*$/.test(str));
 }
 function decodeHtml(html) {
+	// unescape html
 	var txt = document.createElement("textarea");
 	txt.innerHTML = html;
 	return txt.value;

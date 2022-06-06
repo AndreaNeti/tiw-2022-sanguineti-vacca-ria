@@ -27,14 +27,11 @@
 	</div>
 
 	<div class="content">
-		<div class="title">Create Album</div>
-		<form th:action="@{/CreateAlbum}" method="post">
+		<form action="#">
+			<div class="title">Create Album</div>
 			<input type="text" name="AlbumTitle" placeholder="Album title"
 				minlength="4" maxlength="50" /> <input type="submit"
-				value="Create Album"><br>
-			<div class="errorMsg" th:if="${errorMsg!=null}" th:text="${errorMsg}"></div>
-			<div class="successMsg" th:if="${successMsg!=null}"
-				th:text="${successMsg}"></div>
+				value="Create Album">
 			<div class="images">
 				<div class="imageSelection" th:each="image : ${myImages}">
 					<input type="checkbox" name="image" th:value="${image.getId()}" />
