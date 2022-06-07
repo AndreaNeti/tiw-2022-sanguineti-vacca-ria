@@ -1,9 +1,12 @@
 package it.polimi.tiw.controllers;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
@@ -14,6 +17,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 
 import it.polimi.tiw.beans.Album;
 import it.polimi.tiw.beans.User;
@@ -34,7 +38,28 @@ public class GetAlbums extends HttpServlet {
 	public void init() throws ServletException {
 		connection = ConnectionHandler.getConnection(getServletContext());
 	}
-
+	
+	@Override
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) {
+		User me = (User) request.getSession().getAttribute("user");
+		AlbumDAO albumDAO = new AlbumDAO(connection);
+		String requestData = null;
+		try {
+			requestData = request.getReader().lines().collect(Collectors.joining());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		Type listType = new TypeToken<ArrayList<Album>>(){}.getType();
+		List<Album> orderedAlbums = new Gson().fromJson(requestData, listType);
+		try {
+			albumDAO.changeOrder(me, orderedAlbums);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {

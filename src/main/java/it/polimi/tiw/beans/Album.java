@@ -7,11 +7,21 @@ public class Album {
 	private final int id;
 	private final String title;
 	private final Date date;
+	private final int orderValue;
 
 	public Album(int id, String title, Date date) {
 		this.id = id;
 		this.title = title;
 		this.date = date;
+		orderValue = 0;
+	}
+	
+	
+	public Album(int id, String title, Date date, int orderValue) {
+		this.id = id;
+		this.title = title;
+		this.date = date;
+		this.orderValue = orderValue;
 	}
 
 	public int getId() {
@@ -25,5 +35,9 @@ public class Album {
 	public String getDate() {
 		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 		return sdf.format(date);
+	}
+	
+	public int getOrder() {
+		return orderValue;
 	}
 }

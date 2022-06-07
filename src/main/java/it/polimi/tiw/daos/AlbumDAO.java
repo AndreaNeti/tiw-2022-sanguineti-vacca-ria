@@ -21,7 +21,7 @@ public class AlbumDAO {
 
 	public List<Album> getMyAlbums(User user) throws SQLException {
 		List<Album> myAlbums = new ArrayList<Album>();
-		String query = "SELECT  ID_Album, Title, Date FROM album  WHERE ID_User = ? ORDER BY Date DESC";
+		String query = "SELECT  ID_Album, Title, Date, Value FROM album  WHERE ID_User = ? ORDER BY Value";
 		try (PreparedStatement pstatement = con.prepareStatement(query);) {
 			pstatement.setInt(1, user.getId());
 			ResultSet result = pstatement.executeQuery();
@@ -29,7 +29,7 @@ public class AlbumDAO {
 				return Collections.emptyList();
 			while (result.next()) {
 				Album album = new Album(result.getInt("ID_Album"), result.getString("Title"),
-						new Date(result.getDate("Date").getTime()));
+						new Date(result.getDate("Date").getTime()), result.getInt("Value"));
 				myAlbums.add(album);
 			}
 			return myAlbums;
@@ -82,6 +82,28 @@ public class AlbumDAO {
 			pstatement.setInt(1, albumID);
 			for (Integer i : imageID) {
 				pstatement.setInt(2, i);
+				pstatement.addBatch();
+			}
+			pstatement.executeBatch();
+		}
+		query = "INSERT INTO album_order (ID_Album, ID_User) VALUES (?, ?)";
+		try (PreparedStatement pstatement = con.prepareStatement(query);) {
+			pstatement.setInt(1, albumID);
+			pstatement.setInt(2, owner.getId());
+			pstatement.executeUpdate();
+		} 
+		con.commit();
+	}
+	
+	public void changeOrder(User owner, List<Album> orderedList) throws SQLException {
+		con.setAutoCommit(false);
+		String query;
+		query = "UPDATE album_order SET Value = ? WHERE ID_Album = ? AND ID_User = ?";
+		try (PreparedStatement pstatement = con.prepareStatement(query);) {
+			pstatement.setInt(3, owner.getId());
+			for (Album a : orderedList) {
+				pstatement.setInt(1, a.getOrder());
+				pstatement.setInt(2, a.getId());
 				pstatement.addBatch();
 			}
 			pstatement.executeBatch();
