@@ -97,17 +97,18 @@
 				});
 				albumTab.addEventListener("mousedown", (e) => {
 					if (editingOrder === true) {
-						var albumTabBefore, albumTabBeforeTop, albumBefore, albumTabAfter, albumTabAfterBottom, albumAfter;
+						var albumTabBefore, albumTabBeforeCenter, albumBefore, albumTabAfter, albumTabAfterCenter, albumAfter;
 						var getAlbumBeforeAfter = function() {
 							albumTabBefore = myAlbumTabs[album.orderValue - 1];
 							if (albumTabBefore) {
-								albumTabBeforeTop = albumTabBefore.getBoundingClientRect().top;
+								let albumTabBeforeRect = albumTabBefore.getBoundingClientRect();
+								albumTabBeforeCenter = albumTabBeforeRect.top + (albumTabBeforeRect.height / 2);
 								albumBefore = myAlbums[album.orderValue - 1];
 							}
 							albumTabAfter = myAlbumTabs[album.orderValue + 1];
 							if (albumTabAfter) {
 								let albumTabAfterRect = albumTabAfter.getBoundingClientRect();
-								albumTabAfterBottom = albumTabAfterRect.top + albumTabAfterRect.height;
+								albumTabAfterCenter = albumTabAfterRect.top + (albumTabAfterRect.height / 2);
 								albumAfter = myAlbums[album.orderValue + 1];
 							}
 						}
@@ -133,11 +134,11 @@
 						var mouseMove = function(e) {
 							// move the ghost following mouse position
 							let ghostTop = (e.pageY - clickY)
-							let ghostBottom = ghostTop + rect.height;
+							let ghostCenter = ghostTop + (rect.height / 2);
 							ghost.style.left = (e.pageX - clickX) + "px";
 							ghost.style.top = ghostTop + "px";
 							// swap with upper album
-							if (albumTabBefore && ghostBottom < albumTabBeforeTop) {
+							if (albumTabBefore && ghostCenter < albumTabBeforeCenter) {
 								let oldClickedOrderValue = album.orderValue;
 								// swap positions
 								clickedTab.parentNode.insertBefore(clickedTab, albumTabBefore);
@@ -153,7 +154,7 @@
 								albumBefore.orderValue = oldClickedOrderValue;
 
 								getAlbumBeforeAfter();
-							} else if (albumTabAfter && ghostTop > albumTabAfterBottom) { // swap with lower album
+							} else if (albumTabAfter && ghostCenter > albumTabAfterCenter) { // swap with lower album
 								let oldClickedOrderValue = album.orderValue;
 								// swap positions
 								clickedTab.parentNode.insertBefore(albumTabAfter, clickedTab);
