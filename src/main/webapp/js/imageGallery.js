@@ -97,31 +97,39 @@
 				});
 				albumTab.addEventListener("mousedown", (e) => {
 					if (editingOrder === true) {
-						let rect = e.target.getBoundingClientRect();
-						var clickX = (e.clientX - rect.left);
-						var clickY = (e.clientY - rect.top);
+						// the rectangle containing the album div clicked
+						let rect = e.currentTarget.getBoundingClientRect();
+						// the click position relative to the album div
+						var clickX = (e.pageX - rect.left);
+						var clickY = (e.pageY - rect.top);
 
 						var clickedTab = myAlbumTabs[album.orderValue - 1]
+						// create a ghost of the clicked album
 						var ghost = clickedTab.cloneNode(true);
 						ghost.style.position = "fixed";
 						ghost.style.width = rect.width + "px";
+						ghost.style.margin = 0;
+						ghost.style.left = rect.left + "px";
+						ghost.style.top = rect.top + "px";
 						content.appendChild(ghost);
-
+						// make the actual album div not visible but still taking space
 						clickedTab.style.visibility = "hidden";
 
-						ghost.style.left = (e.pageX - clickX) + "px";
-						ghost.style.top = (e.pageY - clickY) + "px";
 						var mouseMove = function(e) {
+							// move the ghost following mouse position
 							ghost.style.left = (e.pageX - clickX) + "px";
 							ghost.style.top = (e.pageY - clickY) + "px";
 						}
 						var mouseUp = function(e) {
 							clickedTab.style.visibility = "visible";
+							// delete ghost
 							if (ghost)
 								ghost.remove();
+							// mouse cick released, remove listeners mouse move and mouse up
 							document.removeEventListener("mousemove", mouseMove);
 							document.removeEventListener("mouseup", mouseUp);
 						}
+						// after the  click now have to listen for mouse move and mouse up
 						document.addEventListener("mousemove", mouseMove);
 						document.addEventListener("mouseup", mouseUp);
 					}
