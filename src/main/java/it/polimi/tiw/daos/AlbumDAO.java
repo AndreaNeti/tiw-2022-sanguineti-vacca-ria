@@ -91,7 +91,7 @@ public class AlbumDAO {
 		try (PreparedStatement pstatement = con.prepareStatement(query);) {
 			ResultSet result = pstatement.executeQuery();
 			if (!result.isBeforeFirst()) {
-				maxValue = 1;
+				maxValue = 0;
 			} else {
 				result.next();
 				maxValue = result.getInt("last") + 1;

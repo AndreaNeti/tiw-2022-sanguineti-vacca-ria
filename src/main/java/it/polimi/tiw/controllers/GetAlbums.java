@@ -80,9 +80,9 @@ public class GetAlbums extends HttpServlet {
 			response.getWriter().println(Messages.INVALID_ORDER.toString());
 			return;
 		}
-		Set<Integer> values =  new HashSet<Integer>();
+		Set<Integer> values = new HashSet<Integer>();
 		for (Album a : orderedAlbums) {
-			if (!values.add(a.getId()) || a.getOrder() < 1 || a.getOrder() > myAlbums.size()) {
+			if (!values.add(a.getOrder()) || a.getOrder() < 0 || a.getOrder() >= myAlbums.size()) {
 				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 				response.getWriter().println(Messages.INVALID_ORDER.toString());
 				return;

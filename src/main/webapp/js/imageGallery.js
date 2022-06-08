@@ -59,7 +59,7 @@
 		// my album list, got from json
 		let myAlbums;
 		// html divs
-		let myAlbumTabs = [];
+		let myAlbumTabs;
 		let editingOrder = false;
 
 		this.start = function() {
@@ -97,13 +97,28 @@
 				});
 				albumTab.addEventListener("mousedown", (e) => {
 					if (editingOrder === true) {
+						var albumTabBefore, albumTabBeforeTop, albumBefore, albumTabAfter, albumTabAfterBottom, albumAfter;
+						var getAlbumBeforeAfter = function() {
+							albumTabBefore = myAlbumTabs[album.orderValue - 1];
+							if (albumTabBefore) {
+								albumTabBeforeTop = albumTabBefore.getBoundingClientRect().top;
+								albumBefore = myAlbums[album.orderValue - 1];
+							}
+							albumTabAfter = myAlbumTabs[album.orderValue + 1];
+							if (albumTabAfter) {
+								let albumTabAfterRect = albumTabAfter.getBoundingClientRect();
+								albumTabAfterBottom = albumTabAfterRect.top + albumTabAfterRect.height;
+								albumAfter = myAlbums[album.orderValue + 1];
+							}
+						}
 						// the rectangle containing the album div clicked
-						let rect = e.currentTarget.getBoundingClientRect();
+						var rect = e.currentTarget.getBoundingClientRect();
 						// the click position relative to the album div
 						var clickX = (e.pageX - rect.left);
 						var clickY = (e.pageY - rect.top);
+						var clickedTab = myAlbumTabs[album.orderValue];
+						getAlbumBeforeAfter();
 
-						var clickedTab = myAlbumTabs[album.orderValue - 1]
 						// create a ghost of the clicked album
 						var ghost = clickedTab.cloneNode(true);
 						ghost.style.position = "fixed";
@@ -117,10 +132,47 @@
 
 						var mouseMove = function(e) {
 							// move the ghost following mouse position
+							let ghostTop = (e.pageY - clickY)
+							let ghostBottom = ghostTop + rect.height;
 							ghost.style.left = (e.pageX - clickX) + "px";
-							ghost.style.top = (e.pageY - clickY) + "px";
+							ghost.style.top = ghostTop + "px";
+							// swap with upper album
+							if (albumTabBefore && ghostBottom < albumTabBeforeTop) {
+								let oldClickedOrderValue = album.orderValue;
+								// swap positions
+								clickedTab.parentNode.insertBefore(clickedTab, albumTabBefore);
+								let temp = myAlbumTabs[oldClickedOrderValue];
+								myAlbumTabs[oldClickedOrderValue] = myAlbumTabs[oldClickedOrderValue - 1];
+								myAlbumTabs[oldClickedOrderValue - 1] = temp;
+
+								temp = myAlbums[oldClickedOrderValue];
+								myAlbums[oldClickedOrderValue] = myAlbums[oldClickedOrderValue - 1];
+								myAlbums[oldClickedOrderValue - 1] = temp;
+
+								album.orderValue = albumBefore.orderValue;
+								albumBefore.orderValue = oldClickedOrderValue;
+
+								getAlbumBeforeAfter();
+							} else if (albumTabAfter && ghostTop > albumTabAfterBottom) { // swap with lower album
+								let oldClickedOrderValue = album.orderValue;
+								// swap positions
+								clickedTab.parentNode.insertBefore(albumTabAfter, clickedTab);
+								let temp = myAlbumTabs[oldClickedOrderValue];
+								myAlbumTabs[oldClickedOrderValue] = myAlbumTabs[oldClickedOrderValue + 1];
+								myAlbumTabs[oldClickedOrderValue + 1] = temp;
+
+								temp = myAlbums[oldClickedOrderValue];
+								myAlbums[oldClickedOrderValue] = myAlbums[oldClickedOrderValue + 1];
+								myAlbums[oldClickedOrderValue + 1] = temp;
+
+								album.orderValue = albumAfter.orderValue;
+								albumAfter.orderValue = oldClickedOrderValue;
+
+								getAlbumBeforeAfter();
+							}
+
 						}
-						var mouseUp = function(e) {
+						var mouseUp = function() {
 							clickedTab.style.visibility = "visible";
 							// delete ghost
 							if (ghost)
@@ -146,6 +198,7 @@
 			sectionTitle.classList.add("sectionTitle");
 			sectionTitle.textContent = "Your Albums";
 			section.appendChild(sectionTitle);
+			myAlbumTabs = [];
 			// add my albums to container
 			myAlbums.forEach(function(album) {
 				let myAlbumTab = appendAlbum(album, section);
