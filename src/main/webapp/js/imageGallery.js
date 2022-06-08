@@ -56,6 +56,11 @@
 	}
 
 	function AlbumList() {
+		// my album list, got from json
+		let myAlbums;
+		// html divs
+		let myAlbumTabs = [];
+		let editingOrder = false;
 
 		this.start = function() {
 			var self = this;
@@ -69,7 +74,7 @@
 		}
 
 		this.update = function(albums) {
-			var myAlbumList = albums.myAlbums;
+			myAlbums = albums.myAlbums;
 			var otherAlbumList = albums.otherAlbums;
 			var appendAlbum = function(album, container) {
 				// album tab
@@ -90,8 +95,40 @@
 				albumTab.addEventListener("click", _ => {
 					pageOrchestrator.changeView(new AlbumDetails(album.id));
 				});
+				albumTab.addEventListener("mousedown", (e) => {
+					if (editingOrder === true) {
+						let rect = e.target.getBoundingClientRect();
+						var clickX = (e.clientX - rect.left);
+						var clickY = (e.clientY - rect.top);
+
+						var clickedTab = myAlbumTabs[album.orderValue - 1]
+						var ghost = clickedTab.cloneNode(true);
+						ghost.style.position = "fixed";
+						ghost.style.width = rect.width + "px";
+						content.appendChild(ghost);
+
+						clickedTab.style.visibility = "hidden";
+
+						ghost.style.left = (e.pageX - clickX) + "px";
+						ghost.style.top = (e.pageY - clickY) + "px";
+						var mouseMove = function(e) {
+							ghost.style.left = (e.pageX - clickX) + "px";
+							ghost.style.top = (e.pageY - clickY) + "px";
+						}
+						var mouseUp = function(e) {
+							clickedTab.style.visibility = "visible";
+							if (ghost)
+								ghost.remove();
+							document.removeEventListener("mousemove", mouseMove);
+							document.removeEventListener("mouseup", mouseUp);
+						}
+						document.addEventListener("mousemove", mouseMove);
+						document.addEventListener("mouseup", mouseUp);
+					}
+				});
 
 				container.appendChild(albumTab);
+				return albumTab;
 			}
 			// create my album containter
 			var section = document.createElement("div");
@@ -102,11 +139,48 @@
 			sectionTitle.textContent = "Your Albums";
 			section.appendChild(sectionTitle);
 			// add my albums to container
-			myAlbumList.forEach(function(album) {
-				appendAlbum(album, section);
+			myAlbums.forEach(function(album) {
+				let myAlbumTab = appendAlbum(album, section);
+				myAlbumTabs.push(myAlbumTab);
 			});
 			// append my albums container to content
 			content.appendChild(section);
+
+			// create change order button
+			let changeOrder = document.createElement("button");
+			changeOrder.textContent = "Change Order";
+			changeOrder.id = "changeOrder";
+			content.appendChild(changeOrder);
+			// create cancel order button
+			let cancelOrder = document.createElement("button");
+			cancelOrder.textContent = "Cancel";
+			cancelOrder.id = "cancelOrder";
+			content.appendChild(cancelOrder);
+
+			changeOrder.addEventListener("click", _ => {
+				if (editingOrder === false) {
+					changeOrder.textContent = "Save Order";
+					cancelOrder.style.display = "inline-block";
+					editingOrder = true;
+				} else {
+					makeCall("POST", "GetAlbums", JSON.stringify(myAlbums),
+						function success(message) {
+							pageOrchestrator.refresh();
+							alertMessage.show(message, false);
+							changeOrder.textContent = "Change Order";
+							cancelOrder.style.display = "none";
+							editingOrder = false;
+						},
+						function error(message) {
+							alertMessage.show(message);
+						},
+						false);
+				}
+			});
+			cancelOrder.addEventListener("click", _ => {
+				editingOrder = false;
+				pageOrchestrator.refresh();
+			});
 
 			// create other albums container
 			section = document.createElement("div");
@@ -359,7 +433,7 @@
 						textArea.value = "";
 						textArea.focus();
 					} else {
-						// 
+						// request add comment
 						makeCall("POST", "ImageDetails", form,
 							function success(message) {
 								let comment = {

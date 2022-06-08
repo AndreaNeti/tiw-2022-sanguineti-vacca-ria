@@ -22,7 +22,7 @@ public class CheckLogin implements Filter {
 		HttpSession session = req.getSession();
 		if (session.isNew() || session.getAttribute("user") == null) {
 			res.setStatus(HttpServletResponse.SC_FORBIDDEN);
-			String loginpath = req.getServletContext().getContextPath() + "/home.html";
+			String loginpath = req.getServletContext().getContextPath() + "/login.html";
 			res.setHeader("Location", loginpath);
 			return;
 		}

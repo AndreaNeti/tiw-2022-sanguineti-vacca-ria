@@ -51,7 +51,8 @@ public class GetAlbums extends HttpServlet {
 			e.printStackTrace();
 		}
 		Type listType = new TypeToken<ArrayList<Album>>(){}.getType();
-		List<Album> orderedAlbums = new Gson().fromJson(requestData, listType);
+		Gson gson = new GsonBuilder().setDateFormat("dd/MM/yyyy").create();
+		List<Album> orderedAlbums = gson.fromJson(requestData, listType);
 		try {
 			albumDAO.changeOrder(me, orderedAlbums);
 		} catch (SQLException e) {

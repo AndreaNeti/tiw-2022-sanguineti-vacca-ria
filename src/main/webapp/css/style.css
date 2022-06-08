@@ -3,6 +3,7 @@
 body {
 	font-family: 'Roboto', sans-serif;
 	margin: 0;
+	user-select: none;
 }
 
 .title {
@@ -40,7 +41,7 @@ body {
 	background-color: rgba(50, 205, 50, 0.75);
 }
 
-input[type=text], input[type=password], input[type=email] {
+input[type=text], input[type=password], input[type=email], button {
 	padding: 10px;
 	margin: 10px;
 	border-radius: 5px;
@@ -73,7 +74,7 @@ input[type=text], input[type=password], input[type=email] {
 	margin-bottom: 20px;
 }
 
-input[type=button] {
+input[type=button], button {
 	font-family: 'Roboto', sans-serif;
 	border: none;
 	font-size: 1em;
@@ -87,7 +88,7 @@ input[type=button] {
 	cursor: pointer;
 }
 
-input[type=button]:hover {
+input[type=button]:hover, button:hover {
 	background-color: #15e;
 }
 

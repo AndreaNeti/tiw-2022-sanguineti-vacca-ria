@@ -2,7 +2,7 @@
  * AJAX call management
  */
 
-function makeCall(method, url, formElement, successCback, errorCback) {
+function makeCall(method, url, data, successCback, errorCback, isForm = true) {
 	var req = new XMLHttpRequest(); // visible by closure
 	req.onreadystatechange = function() {
 		if (req.readyState == XMLHttpRequest.DONE) {
@@ -23,13 +23,16 @@ function makeCall(method, url, formElement, successCback, errorCback) {
 		}
 	}; // closure
 	req.open(method, url);
-	if (formElement == null) {
+	if (data == null) {
 		req.send();
 	} else {
-		req.send(new FormData(formElement));
-	}
-	if (formElement !== null) {
-		formElement.reset();
+		if (isForm === true) {
+			let form = data;
+			data = new FormData(form);
+			// empty form values
+			form.reset();
+		}
+		req.send(data);
 	}
 }
 function isBlank(str) {
@@ -46,15 +49,15 @@ function Message() {
 	let errorMsg = document.getElementById("errorMsg");
 	let successMsg = document.getElementById("successMsg");
 	this.show = function(message, error = true) {
-		if (error) {			
+		if (error) {
 			errorMsg.classList.add("fade");
 			errorMsg.textContent = message;
-			setTimeout(function() {errorMsg.classList.remove("fade");}, 5000);
+			setTimeout(function() { errorMsg.classList.remove("fade"); }, 5000);
 		}
 		else {
 			successMsg.classList.add("fade");
 			successMsg.textContent = message;
-			setTimeout(function() {successMsg.classList.remove("fade");}, 5000);
+			setTimeout(function() { successMsg.classList.remove("fade"); }, 5000);
 		}
 	}
 }

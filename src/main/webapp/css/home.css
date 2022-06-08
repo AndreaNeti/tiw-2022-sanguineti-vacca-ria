@@ -42,7 +42,10 @@ a {
 	right: 10px;
 	font-style: italic;
 }
-
+#cancelOrder{
+	display: none;	
+    margin: 0 10px;
+}
 /* DETAILS.css */
 .imageDetails {
 	text-align: left;
