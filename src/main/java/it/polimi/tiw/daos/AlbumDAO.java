@@ -63,6 +63,7 @@ public class AlbumDAO {
 	public void newAlbum(String title, User owner, List<Integer> imageID) throws SQLException {
 		con.setAutoCommit(false);
 		int albumID;
+		int maxValue = 0;
 		String query;
 		query = "INSERT INTO album (Title, Date, ID_User) VALUES (?, CURRENT_TIMESTAMP(), ?);";
 		try (PreparedStatement pstatement = con.prepareStatement(query);) {
@@ -86,15 +87,26 @@ public class AlbumDAO {
 			}
 			pstatement.executeBatch();
 		}
-		query = "INSERT INTO album_order (ID_Album, ID_User) VALUES (?, ?)";
+		query = "SELECT MAX(Value) as last from album_order;";
+		try (PreparedStatement pstatement = con.prepareStatement(query);) {
+			ResultSet result = pstatement.executeQuery();
+			if (!result.isBeforeFirst()) {
+				maxValue = 1;
+			} else {
+				result.next();
+				maxValue = result.getInt("last") + 1;
+			}
+		}
+		query = "INSERT INTO album_order (ID_Album, ID_User, Value) VALUES (?, ?, ?)";
 		try (PreparedStatement pstatement = con.prepareStatement(query);) {
 			pstatement.setInt(1, albumID);
 			pstatement.setInt(2, owner.getId());
+			pstatement.setInt(3, maxValue);
 			pstatement.executeUpdate();
-		} 
+		}
 		con.commit();
 	}
-	
+
 	public void changeOrder(User owner, List<Album> orderedList) throws SQLException {
 		con.setAutoCommit(false);
 		String query;
