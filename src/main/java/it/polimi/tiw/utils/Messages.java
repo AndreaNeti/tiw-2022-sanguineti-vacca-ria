@@ -11,6 +11,7 @@ public enum Messages {
 	INVALID_MIN_USERNAME("Min username length is 4"),
 	INVALID_MAX_USERNAME("Max username length is 50"),
 	INVALID_EMAIL("Not a valid email"),
+	INVALID_ORDER("Not a valid album order"),
 	PASSWORDS_NO_MATCH("Passwords don't match"),
 	USERNAME_TAKEN("Username or email already taken"),
 	INVALID_USERNAME("The specified username contains invalid characters."),
@@ -33,7 +34,8 @@ public enum Messages {
 	COMMENT_INSERTED("Comment inserted successfully"),
 	ALBUM_CREATED("Album created successfully"),
 	USER_REGISTERED("Successfully registered"),
-	IMAGE_UPLOADED("Image uploaded successfully");
+	IMAGE_UPLOADED("Image uploaded successfully"),
+	ORDER_CHANGED("Successfully changed order");
 	
 	private final String error;
 	

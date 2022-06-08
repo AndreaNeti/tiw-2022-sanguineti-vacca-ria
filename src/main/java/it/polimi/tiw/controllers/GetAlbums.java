@@ -5,7 +5,11 @@ import java.lang.reflect.Type;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletException;
@@ -23,6 +27,7 @@ import it.polimi.tiw.beans.Album;
 import it.polimi.tiw.beans.User;
 import it.polimi.tiw.daos.AlbumDAO;
 import it.polimi.tiw.utils.ConnectionHandler;
+import it.polimi.tiw.utils.Messages;
 
 @WebServlet("/GetAlbums")
 @MultipartConfig
@@ -38,29 +43,63 @@ public class GetAlbums extends HttpServlet {
 	public void init() throws ServletException {
 		connection = ConnectionHandler.getConnection(getServletContext());
 	}
-	
+
 	@Override
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) {
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		User me = (User) request.getSession().getAttribute("user");
 		AlbumDAO albumDAO = new AlbumDAO(connection);
 		String requestData = null;
-		try {
-			requestData = request.getReader().lines().collect(Collectors.joining());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		Type listType = new TypeToken<ArrayList<Album>>(){}.getType();
+
+		requestData = request.getReader().lines().collect(Collectors.joining());
+		Type listType = new TypeToken<ArrayList<Album>>() {
+		}.getType();
+		List<Album> orderedAlbums = Collections.emptyList();
 		Gson gson = new GsonBuilder().setDateFormat("dd/MM/yyyy").create();
-		List<Album> orderedAlbums = gson.fromJson(requestData, listType);
+		try {
+			orderedAlbums = gson.fromJson(requestData, listType);
+		} catch (Exception e) {
+			e.printStackTrace();
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			response.getWriter().println(Messages.INVALID_ORDER.toString());
+			return;
+		}
+		List<Album> myAlbums = null;
+		try {
+			myAlbums = albumDAO.getMyAlbums(me);
+		} catch (SQLException e) {
+			e.printStackTrace();
+			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			response.getWriter().println("Impossible to query DB");
+			return;
+		}
+		// nlogn instead of n^2
+		orderedAlbums.sort(Comparator.comparingInt(Album::getId));
+		myAlbums.sort(Comparator.comparingInt(Album::getId));
+		if (!myAlbums.equals(orderedAlbums)) {
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			response.getWriter().println(Messages.INVALID_ORDER.toString());
+			return;
+		}
+		Set<Integer> values =  new HashSet<Integer>();
+		for (Album a : orderedAlbums) {
+			if (!values.add(a.getId()) || a.getOrder() < 1 || a.getOrder() > myAlbums.size()) {
+				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				response.getWriter().println(Messages.INVALID_ORDER.toString());
+				return;
+			}
+		}
 		try {
 			albumDAO.changeOrder(me, orderedAlbums);
 		} catch (SQLException e) {
 			e.printStackTrace();
+			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			response.getWriter().println("Impossible to query DB");
+			return;
 		}
+		response.setStatus(HttpServletResponse.SC_OK);
+		response.getWriter().println(Messages.ORDER_CHANGED.toString());
 	}
-	
-	
+
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
