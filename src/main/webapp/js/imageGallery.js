@@ -191,73 +191,79 @@
 				container.appendChild(albumTab);
 				return albumTab;
 			}
-			// create my album containter
-			var section = document.createElement("div");
-			section.classList.add("section");
-			// set title
-			var sectionTitle = document.createElement("div");
-			sectionTitle.classList.add("sectionTitle");
-			sectionTitle.textContent = "Your Albums";
-			section.appendChild(sectionTitle);
-			myAlbumTabs = [];
-			// add my albums to container
-			myAlbums.forEach(function(album) {
-				let myAlbumTab = appendAlbum(album, section);
-				myAlbumTabs.push(myAlbumTab);
-			});
-			// append my albums container to content
-			content.appendChild(section);
+			// if you have at least one album
+			if (myAlbums.length > 0) {
+				// create my album containter
+				var section = document.createElement("div");
+				section.classList.add("section");
+				// set title
+				var sectionTitle = document.createElement("div");
+				sectionTitle.classList.add("sectionTitle");
+				sectionTitle.textContent = "Your Albums";
+				section.appendChild(sectionTitle);
+				myAlbumTabs = [];
+				// add my albums to container
+				myAlbums.forEach(function(album) {
+					let myAlbumTab = appendAlbum(album, section);
+					myAlbumTabs.push(myAlbumTab);
+				});
+				// append my albums container to content
+				content.appendChild(section);
+				// make sense to reorder only if you have at least 2 albums
+				if (myAlbums.length > 1) {
+					// create change order button
+					let changeOrder = document.createElement("button");
+					changeOrder.textContent = "Change Order";
+					changeOrder.id = "changeOrder";
+					content.appendChild(changeOrder);
+					// create cancel order button
+					let cancelOrder = document.createElement("button");
+					cancelOrder.textContent = "Cancel";
+					cancelOrder.id = "cancelOrder";
+					content.appendChild(cancelOrder);
 
-			// create change order button
-			let changeOrder = document.createElement("button");
-			changeOrder.textContent = "Change Order";
-			changeOrder.id = "changeOrder";
-			content.appendChild(changeOrder);
-			// create cancel order button
-			let cancelOrder = document.createElement("button");
-			cancelOrder.textContent = "Cancel";
-			cancelOrder.id = "cancelOrder";
-			content.appendChild(cancelOrder);
-
-			changeOrder.addEventListener("click", _ => {
-				if (editingOrder === false) {
-					changeOrder.textContent = "Save Order";
-					cancelOrder.style.display = "inline-block";
-					editingOrder = true;
-				} else {
-					makeCall("POST", "GetAlbums", JSON.stringify(myAlbums),
-						function success(message) {
-							pageOrchestrator.refresh();
-							alertMessage.show(message, false);
-							changeOrder.textContent = "Change Order";
-							cancelOrder.style.display = "none";
-							editingOrder = false;
-						},
-						function error(message) {
-							alertMessage.show(message);
-						},
-						false);
+					changeOrder.addEventListener("click", _ => {
+						if (editingOrder === false) {
+							changeOrder.textContent = "Save Order";
+							cancelOrder.style.display = "inline-block";
+							editingOrder = true;
+						} else {
+							makeCall("POST", "GetAlbums", JSON.stringify(myAlbums),
+								function success(message) {
+									alertMessage.show(message, false);
+									changeOrder.textContent = "Change Order";
+									cancelOrder.style.display = "none";
+									editingOrder = false;
+								},
+								function error(message) {
+									alertMessage.show(message);
+								},
+								false);
+						}
+					});
+					cancelOrder.addEventListener("click", _ => {
+						editingOrder = false;
+						pageOrchestrator.refresh();
+					});
 				}
-			});
-			cancelOrder.addEventListener("click", _ => {
-				editingOrder = false;
-				pageOrchestrator.refresh();
-			});
-
-			// create other albums container
-			section = document.createElement("div");
-			section.classList.add("section");
-			// set title
-			sectionTitle = document.createElement("div");
-			sectionTitle.classList.add("sectionTitle");
-			sectionTitle.textContent = "Other People's Albums";
-			section.appendChild(sectionTitle);
-			// add other albums to container
-			otherAlbumList.forEach(function(album) {
-				appendAlbum(album, section);
-			});
-			// append other albums container to content
-			content.appendChild(section);
+			}
+			// if others have at least one album
+			if (otherAlbumList.length > 0) {
+				// create other albums container
+				section = document.createElement("div");
+				section.classList.add("section");
+				// set title
+				sectionTitle = document.createElement("div");
+				sectionTitle.classList.add("sectionTitle");
+				sectionTitle.textContent = "Other People's Albums";
+				section.appendChild(sectionTitle);
+				// add other albums to container
+				otherAlbumList.forEach(function(album) {
+					appendAlbum(album, section);
+				});
+				// append other albums container to content
+				content.appendChild(section);
+			}
 		}
 	}
 

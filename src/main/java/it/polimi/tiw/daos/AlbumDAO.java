@@ -87,8 +87,9 @@ public class AlbumDAO {
 			}
 			pstatement.executeBatch();
 		}
-		query = "SELECT MAX(Value) as last from album_order;";
+		query = "SELECT MAX(Value) as last from album_order WHERE ID_User = ?;";
 		try (PreparedStatement pstatement = con.prepareStatement(query);) {
+			pstatement.setInt(1, owner.getId());
 			ResultSet result = pstatement.executeQuery();
 			if (!result.isBeforeFirst()) {
 				maxValue = 0;
