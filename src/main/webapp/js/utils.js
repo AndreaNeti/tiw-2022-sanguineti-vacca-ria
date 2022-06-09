@@ -48,16 +48,28 @@ function decodeHtml(html) {
 function Message() {
 	let errorMsg = document.getElementById("errorMsg");
 	let successMsg = document.getElementById("successMsg");
+	var timeout, messageBox;
 	this.show = function(message, error = true) {
+		clearTimeout(timeout);
 		if (error) {
-			errorMsg.classList.add("fade");
-			errorMsg.textContent = message;
-			setTimeout(function() { errorMsg.classList.remove("fade"); }, 5000);
+			fadeOut();
+			messageBox = errorMsg;
 		}
 		else {
-			successMsg.classList.add("fade");
-			successMsg.textContent = message;
-			setTimeout(function() { successMsg.classList.remove("fade"); }, 5000);
+			fadeOut();
+			messageBox = successMsg;
+		}
+		messageBox.classList.remove("fadeOut");
+		messageBox.classList.add("fadeIn");
+		messageBox.textContent = message;
+		timeout = setTimeout(fadeOut, 5000);
+
+		function fadeOut() {
+			if (messageBox) {
+				console.log(messageBox.id);
+				messageBox.classList.remove("fadeIn");
+				messageBox.classList.add("fadeOut");
+			}
 		}
 	}
 }

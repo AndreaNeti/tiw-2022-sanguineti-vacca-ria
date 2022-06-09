@@ -30,8 +30,13 @@ body {
 	opacity: 0;
 	
 }
-.fade{
-	animation: fade 5s linear;
+.fadeIn{
+	animation: fadeIn 0.5s linear;
+	animation-fill-mode: forwards;  
+}
+.fadeOut{
+	animation: fadeOut 0.5s linear;
+	animation-fill-mode: forwards;  
 }
 #errorMsg {
 	background-color: rgba(255, 0, 0, 0.75);
@@ -98,10 +103,12 @@ input[type=button]:hover, button:hover {
 	text-decoration: none;
 	font-weight: bold;
 }
-@keyframes fade {
+@keyframes fadeIn {
   0% { opacity: 0; }
-  5% { opacity: 1; }
-  95% { opacity: 1; }
+  100% { opacity: 1; }
+}
+@keyframes fadeOut {
+  0% { opacity: 1; }
   100% { opacity: 0; }
 }
 /* scrollbar */
