@@ -43,6 +43,7 @@
 
 		this.refresh = function() {
 			this.reset();
+			// show album list (home) on refresh
 			albumList.start();
 		}
 
@@ -95,19 +96,23 @@
 				albumTab.addEventListener("click", _ => {
 					pageOrchestrator.changeView(new AlbumDetails(album.id));
 				});
+				// start drag event
 				albumTab.addEventListener("mousedown", (e) => {
+					// do something only if in editing mode
 					if (editingOrder === true) {
 						var albumTabBefore, albumTabBeforeCenter, albumBefore, albumTabAfter, albumTabAfterCenter, albumAfter;
 						var getAlbumBeforeAfter = function() {
 							albumTabBefore = myAlbumTabs[album.orderValue - 1];
 							if (albumTabBefore) {
 								let albumTabBeforeRect = albumTabBefore.getBoundingClientRect();
+								// the y coordinate of the div center
 								albumTabBeforeCenter = albumTabBeforeRect.top + (albumTabBeforeRect.height / 2);
 								albumBefore = myAlbums[album.orderValue - 1];
 							}
 							albumTabAfter = myAlbumTabs[album.orderValue + 1];
 							if (albumTabAfter) {
 								let albumTabAfterRect = albumTabAfter.getBoundingClientRect();
+								// the y coordinate of the div center
 								albumTabAfterCenter = albumTabAfterRect.top + (albumTabAfterRect.height / 2);
 								albumAfter = myAlbums[album.orderValue + 1];
 							}
@@ -128,9 +133,9 @@
 						ghost.style.left = rect.left + "px";
 						ghost.style.top = rect.top + "px";
 						content.appendChild(ghost);
-						// make the actual album div not visible but still taking space
+						// make the clicked album div not visible but still taking space
 						clickedTab.style.visibility = "hidden";
-
+						// drag function
 						var mouseMove = function(e) {
 							// move the ghost following mouse position
 							let ghostTop = (e.pageY - clickY)
@@ -140,49 +145,51 @@
 							// swap with upper album
 							if (albumTabBefore && ghostCenter < albumTabBeforeCenter) {
 								let oldClickedOrderValue = album.orderValue;
-								// swap positions
+								// swap div positions
 								clickedTab.parentNode.insertBefore(clickedTab, albumTabBefore);
 								let temp = myAlbumTabs[oldClickedOrderValue];
 								myAlbumTabs[oldClickedOrderValue] = myAlbumTabs[oldClickedOrderValue - 1];
 								myAlbumTabs[oldClickedOrderValue - 1] = temp;
-
+								// swap divs in the saved array
 								temp = myAlbums[oldClickedOrderValue];
 								myAlbums[oldClickedOrderValue] = myAlbums[oldClickedOrderValue - 1];
 								myAlbums[oldClickedOrderValue - 1] = temp;
-
+								// swap the order values
 								album.orderValue = albumBefore.orderValue;
 								albumBefore.orderValue = oldClickedOrderValue;
-
+								// calculate new before and after
 								getAlbumBeforeAfter();
 							} else if (albumTabAfter && ghostCenter > albumTabAfterCenter) { // swap with lower album
 								let oldClickedOrderValue = album.orderValue;
-								// swap positions
+								// swap div positions
 								clickedTab.parentNode.insertBefore(albumTabAfter, clickedTab);
 								let temp = myAlbumTabs[oldClickedOrderValue];
 								myAlbumTabs[oldClickedOrderValue] = myAlbumTabs[oldClickedOrderValue + 1];
 								myAlbumTabs[oldClickedOrderValue + 1] = temp;
-
+								// swap divs in the saved array
 								temp = myAlbums[oldClickedOrderValue];
 								myAlbums[oldClickedOrderValue] = myAlbums[oldClickedOrderValue + 1];
 								myAlbums[oldClickedOrderValue + 1] = temp;
-
+								// swap the order values
 								album.orderValue = albumAfter.orderValue;
 								albumAfter.orderValue = oldClickedOrderValue;
-
+								// calculate new before and after
 								getAlbumBeforeAfter();
 							}
 
 						}
+						// drop function
 						var mouseUp = function() {
+							// make the clicked album div visible again
 							clickedTab.style.visibility = "visible";
 							// delete ghost
 							if (ghost)
 								ghost.remove();
-							// mouse cick released, remove listeners mouse move and mouse up
+							// mouse cick released, remove listeners drag and drop
 							document.removeEventListener("mousemove", mouseMove);
 							document.removeEventListener("mouseup", mouseUp);
 						}
-						// after the  click now have to listen for mouse move and mouse up
+						// after the click now add drag and drop listeners
 						document.addEventListener("mousemove", mouseMove);
 						document.addEventListener("mouseup", mouseUp);
 					}
@@ -190,7 +197,8 @@
 
 				container.appendChild(albumTab);
 				return albumTab;
-			}
+			} // end of append album function
+			
 			// if you have at least one album
 			if (myAlbums.length > 0) {
 				// create my album containter
@@ -228,19 +236,23 @@
 							cancelOrder.style.display = "inline-block";
 							editingOrder = true;
 						} else {
+							editingOrder = false;
+							// send the reordered albums
 							makeCall("POST", "GetAlbums", JSON.stringify(myAlbums),
 								function success(message) {
 									alertMessage.show(message, false);
 									changeOrder.textContent = "Change Order";
 									cancelOrder.style.display = "none";
-									editingOrder = false;
 								},
 								function error(message) {
 									alertMessage.show(message);
+									// some wrong orderValue in albums, refresh and get the old ones
+									pageOrchestrator.refresh();
 								},
 								false);
 						}
 					});
+					// cancel reordering, refresh to get back old albums order
 					cancelOrder.addEventListener("click", _ => {
 						editingOrder = false;
 						pageOrchestrator.refresh();
@@ -381,7 +393,7 @@
 			// create image title div
 			let thumbnailTitle = document.createElement("div");
 			thumbnailTitle.classList.add("thumbnailTitle");
-			thumbnailTitle.textContent = images[imageIndex].title;
+			thumbnailTitle.textContent = decodeHtml(images[imageIndex].title);
 
 			thumbnail.appendChild(img);
 			thumbnail.appendChild(thumbnailTitle);
@@ -531,7 +543,7 @@
 
 		this.show = function(image) {
 			if (!imageDetails) this.initialize();
-			imageTitle.textContent = image.title;
+			imageTitle.textContent = decodeHtml(image.title);
 			img.alt = image.title;
 			img.src = "ImageStreamer?image=" + image.path;
 			imageDate.textContent = image.date;
