@@ -2,7 +2,7 @@
  * Home management
  */
 { // avoid variables ending up in the global scope
-	let alertMessage, content, modal, pageOrchestrator;
+	var alertMessage, content, modal, pageOrchestrator;
 
 	window.addEventListener("load", () => {
 		if (window.sessionStorage.getItem("username") == null) {
@@ -10,7 +10,7 @@
 		} else {
 			pageOrchestrator = new PageOrchestrator();
 			pageOrchestrator.start();
-			pageOrchestrator.changeView(new AlbumList(pageOrchestrator.changeView));
+			pageOrchestrator.changeView(new AlbumList());
 		}
 	});
 	function PageOrchestrator() {
@@ -21,7 +21,7 @@
 			content = document.getElementById("content");
 			alertMessage = new Message();
 			modal = new Modal();
-			albumList = new AlbumList(this.changeView);
+			albumList = new AlbumList();
 			document.getElementById("Username").textContent = sessionStorage.getItem('username');
 			document.getElementById("Logout").addEventListener('click', _ => {
 				window.sessionStorage.removeItem('username');
@@ -75,7 +75,7 @@
 		this.update = function(albums) {
 			myAlbums = albums.myAlbums;
 			var otherAlbumList = albums.otherAlbums;
-			var appendAlbum = function(album, container) {
+			var appendAlbum = function(album, container, reorderable = false) {
 				// album tab
 				let albumTab = document.createElement("div");
 				albumTab.classList.add("albumTab");
@@ -94,105 +94,107 @@
 				albumTab.addEventListener("click", _ => {
 					pageOrchestrator.changeView(new AlbumPage(album.id));
 				});
-				// start drag event
-				albumTab.addEventListener("mousedown", (e) => {
-					// do something only if in editing mode
-					if (editingOrder === true) {
-						var albumTabBefore, albumTabBeforeCenter, albumBefore, albumTabAfter, albumTabAfterCenter, albumAfter;
-						var getAlbumBeforeAfter = function() {
-							albumTabBefore = myAlbumTabs[album.orderValue - 1];
-							if (albumTabBefore) {
-								let albumTabBeforeRect = albumTabBefore.getBoundingClientRect();
-								// the y coordinate of the div center
-								albumTabBeforeCenter = albumTabBeforeRect.top + (albumTabBeforeRect.height / 2);
-								albumBefore = myAlbums[album.orderValue - 1];
+				// Only myAlbums are reorderable
+				if (reorderable === true) {
+					// start drag event
+					albumTab.addEventListener("mousedown", (e) => {
+						// do something only if in editing mode
+						if (editingOrder === true) {
+							var albumTabBefore, albumTabBeforeCenter, albumBefore, albumTabAfter, albumTabAfterCenter, albumAfter;
+							var getAlbumBeforeAfter = function() {
+								albumTabBefore = myAlbumTabs[album.orderValue - 1];
+								if (albumTabBefore) {
+									let albumTabBeforeRect = albumTabBefore.getBoundingClientRect();
+									// the y coordinate of the div center
+									albumTabBeforeCenter = albumTabBeforeRect.top + (albumTabBeforeRect.height / 2);
+									albumBefore = myAlbums[album.orderValue - 1];
+								}
+								albumTabAfter = myAlbumTabs[album.orderValue + 1];
+								if (albumTabAfter) {
+									let albumTabAfterRect = albumTabAfter.getBoundingClientRect();
+									// the y coordinate of the div center
+									albumTabAfterCenter = albumTabAfterRect.top + (albumTabAfterRect.height / 2);
+									albumAfter = myAlbums[album.orderValue + 1];
+								}
 							}
-							albumTabAfter = myAlbumTabs[album.orderValue + 1];
-							if (albumTabAfter) {
-								let albumTabAfterRect = albumTabAfter.getBoundingClientRect();
-								// the y coordinate of the div center
-								albumTabAfterCenter = albumTabAfterRect.top + (albumTabAfterRect.height / 2);
-								albumAfter = myAlbums[album.orderValue + 1];
+							// the rectangle containing the album div clicked
+							var rect = e.currentTarget.getBoundingClientRect();
+							// the click position relative to the album div
+							var clickX = (e.pageX - rect.left);
+							var clickY = (e.pageY - rect.top);
+							var clickedTab = myAlbumTabs[album.orderValue];
+							getAlbumBeforeAfter();
+
+							// create a ghost of the clicked album
+							var ghost = clickedTab.cloneNode(true);
+							ghost.style.position = "fixed";
+							ghost.style.width = rect.width + "px";
+							ghost.style.margin = 0;
+							ghost.style.left = rect.left + "px";
+							ghost.style.top = rect.top + "px";
+							content.appendChild(ghost);
+							// make the clicked album div not visible but still taking space
+							clickedTab.style.visibility = "hidden";
+							// drag function
+							var mouseMove = function(e) {
+								// move the ghost following mouse position
+								let ghostTop = (e.pageY - clickY)
+								let ghostCenter = ghostTop + (rect.height / 2);
+								ghost.style.left = (e.pageX - clickX) + "px";
+								ghost.style.top = ghostTop + "px";
+								// swap with upper album
+								if (albumTabBefore && ghostCenter < albumTabBeforeCenter) {
+									let oldClickedOrderValue = album.orderValue;
+									// swap div positions
+									clickedTab.parentNode.insertBefore(clickedTab, albumTabBefore);
+									let temp = myAlbumTabs[oldClickedOrderValue];
+									myAlbumTabs[oldClickedOrderValue] = myAlbumTabs[oldClickedOrderValue - 1];
+									myAlbumTabs[oldClickedOrderValue - 1] = temp;
+									// swap divs in the saved array
+									temp = myAlbums[oldClickedOrderValue];
+									myAlbums[oldClickedOrderValue] = myAlbums[oldClickedOrderValue - 1];
+									myAlbums[oldClickedOrderValue - 1] = temp;
+									// swap the order values
+									album.orderValue = albumBefore.orderValue;
+									albumBefore.orderValue = oldClickedOrderValue;
+									// calculate new before and after
+									getAlbumBeforeAfter();
+								} else if (albumTabAfter && ghostCenter > albumTabAfterCenter) { // swap with lower album
+									let oldClickedOrderValue = album.orderValue;
+									// swap div positions
+									clickedTab.parentNode.insertBefore(albumTabAfter, clickedTab);
+									let temp = myAlbumTabs[oldClickedOrderValue];
+									myAlbumTabs[oldClickedOrderValue] = myAlbumTabs[oldClickedOrderValue + 1];
+									myAlbumTabs[oldClickedOrderValue + 1] = temp;
+									// swap divs in the saved array
+									temp = myAlbums[oldClickedOrderValue];
+									myAlbums[oldClickedOrderValue] = myAlbums[oldClickedOrderValue + 1];
+									myAlbums[oldClickedOrderValue + 1] = temp;
+									// swap the order values
+									album.orderValue = albumAfter.orderValue;
+									albumAfter.orderValue = oldClickedOrderValue;
+									// calculate new before and after
+									getAlbumBeforeAfter();
+								}
+
 							}
-						}
-						// the rectangle containing the album div clicked
-						var rect = e.currentTarget.getBoundingClientRect();
-						// the click position relative to the album div
-						var clickX = (e.pageX - rect.left);
-						var clickY = (e.pageY - rect.top);
-						var clickedTab = myAlbumTabs[album.orderValue];
-						getAlbumBeforeAfter();
-
-						// create a ghost of the clicked album
-						var ghost = clickedTab.cloneNode(true);
-						ghost.style.position = "fixed";
-						ghost.style.width = rect.width + "px";
-						ghost.style.margin = 0;
-						ghost.style.left = rect.left + "px";
-						ghost.style.top = rect.top + "px";
-						content.appendChild(ghost);
-						// make the clicked album div not visible but still taking space
-						clickedTab.style.visibility = "hidden";
-						// drag function
-						var mouseMove = function(e) {
-							// move the ghost following mouse position
-							let ghostTop = (e.pageY - clickY)
-							let ghostCenter = ghostTop + (rect.height / 2);
-							ghost.style.left = (e.pageX - clickX) + "px";
-							ghost.style.top = ghostTop + "px";
-							// swap with upper album
-							if (albumTabBefore && ghostCenter < albumTabBeforeCenter) {
-								let oldClickedOrderValue = album.orderValue;
-								// swap div positions
-								clickedTab.parentNode.insertBefore(clickedTab, albumTabBefore);
-								let temp = myAlbumTabs[oldClickedOrderValue];
-								myAlbumTabs[oldClickedOrderValue] = myAlbumTabs[oldClickedOrderValue - 1];
-								myAlbumTabs[oldClickedOrderValue - 1] = temp;
-								// swap divs in the saved array
-								temp = myAlbums[oldClickedOrderValue];
-								myAlbums[oldClickedOrderValue] = myAlbums[oldClickedOrderValue - 1];
-								myAlbums[oldClickedOrderValue - 1] = temp;
-								// swap the order values
-								album.orderValue = albumBefore.orderValue;
-								albumBefore.orderValue = oldClickedOrderValue;
-								// calculate new before and after
-								getAlbumBeforeAfter();
-							} else if (albumTabAfter && ghostCenter > albumTabAfterCenter) { // swap with lower album
-								let oldClickedOrderValue = album.orderValue;
-								// swap div positions
-								clickedTab.parentNode.insertBefore(albumTabAfter, clickedTab);
-								let temp = myAlbumTabs[oldClickedOrderValue];
-								myAlbumTabs[oldClickedOrderValue] = myAlbumTabs[oldClickedOrderValue + 1];
-								myAlbumTabs[oldClickedOrderValue + 1] = temp;
-								// swap divs in the saved array
-								temp = myAlbums[oldClickedOrderValue];
-								myAlbums[oldClickedOrderValue] = myAlbums[oldClickedOrderValue + 1];
-								myAlbums[oldClickedOrderValue + 1] = temp;
-								// swap the order values
-								album.orderValue = albumAfter.orderValue;
-								albumAfter.orderValue = oldClickedOrderValue;
-								// calculate new before and after
-								getAlbumBeforeAfter();
+							// drop function
+							var mouseUp = function() {
+								// make the clicked album div visible again
+								clickedTab.style.visibility = "visible";
+								// delete ghost
+								if (ghost)
+									ghost.remove();
+								// mouse cick released, remove listeners drag and drop
+								document.removeEventListener("mousemove", mouseMove);
+								document.removeEventListener("mouseup", mouseUp);
 							}
-
+							// after the click now add drag and drop listeners
+							document.addEventListener("mousemove", mouseMove);
+							document.addEventListener("mouseup", mouseUp);
 						}
-						// drop function
-						var mouseUp = function() {
-							// make the clicked album div visible again
-							clickedTab.style.visibility = "visible";
-							// delete ghost
-							if (ghost)
-								ghost.remove();
-							// mouse cick released, remove listeners drag and drop
-							document.removeEventListener("mousemove", mouseMove);
-							document.removeEventListener("mouseup", mouseUp);
-						}
-						// after the click now add drag and drop listeners
-						document.addEventListener("mousemove", mouseMove);
-						document.addEventListener("mouseup", mouseUp);
-					}
-				});
-
+					});
+				}
 				container.appendChild(albumTab);
 				return albumTab;
 			} // end of append album function
@@ -211,7 +213,7 @@
 				myAlbumTabs = [];
 				// add my albums to container
 				myAlbums.forEach(function(album) {
-					let myAlbumTab = appendAlbum(album, section);
+					let myAlbumTab = appendAlbum(album, section, true);
 					myAlbumTabs.push(myAlbumTab);
 				});
 			} else {
@@ -317,7 +319,6 @@
 			if (newPage === page) return;
 			if (newPage < 0) {
 				alertMessage.show("Invalid page ID");
-				// TODO go back to home ?
 				return;
 			}
 			if (leftButton) {
@@ -366,9 +367,7 @@
 					// in page 0 left button is always invisible
 					leftButton.style.visibility = "hidden";
 					imagesContainer.appendChild(leftButton);
-				}
-				// create right button and set its listener (only if album has more than 5 images)
-				if (images.length > 5) {
+					// create right button and set its listener (only if album has more than 5 images)
 					rightButton = document.createElement("div");
 					rightButton.id = "right";
 					rightButton.textContent = "›";
@@ -384,9 +383,6 @@
 				}
 				// append images container to content
 				content.appendChild(imagesContainer);
-
-				// create and append modal window
-
 			}
 		}
 		let appendImage = function(imageIndex) {
