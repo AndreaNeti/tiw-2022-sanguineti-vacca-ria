@@ -21,7 +21,7 @@ public class AlbumDAO {
 
 	public List<Album> getMyAlbums(User user) throws SQLException {
 		List<Album> myAlbums = new ArrayList<Album>();
-		String query = "SELECT ID_Album, Title, Date, OrderValue FROM album WHERE ID_User = ? ORDER BY OrderValue ASC, Date DESC";
+		String query = "SELECT ID_Album, Title, Date, OrderValue FROM album WHERE ID_User = ? ORDER BY OrderValue IS NULL, OrderValue ASC, Date DESC";
 		try (PreparedStatement pstatement = con.prepareStatement(query);) {
 			pstatement.setInt(1, user.getId());
 			ResultSet result = pstatement.executeQuery();
