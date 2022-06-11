@@ -92,6 +92,11 @@ public class GetAlbums extends HttpServlet {
 			albumDAO.changeOrder(me, orderedAlbums);
 		} catch (SQLException e) {
 			e.printStackTrace();
+			try {
+				connection.rollback();
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
 			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			response.getWriter().println("Impossible to query DB");
 			return;

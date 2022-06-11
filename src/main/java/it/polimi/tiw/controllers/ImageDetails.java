@@ -57,12 +57,13 @@ public class ImageDetails extends HttpServlet {
 			response.getWriter().println(Messages.EMPTY_COMMENT.toString());
 			return;
 		}
-		// Removing whitespace
+		// Removing whitespaces
 		comment = StringUtils.strip(comment);
 		CommentDAO commentDAO = new CommentDAO(connection);
 		try {
 			commentDAO.insertComment(me, imageID, comment);
 		} catch (SQLException e) {
+			// constraint fail, wrong id
 			if (e.getErrorCode() == 1452) {
 				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 				response.getWriter().println(Messages.INVALID_ID.toString());

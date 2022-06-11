@@ -21,7 +21,7 @@ public class AlbumDAO {
 
 	public List<Album> getMyAlbums(User user) throws SQLException {
 		List<Album> myAlbums = new ArrayList<Album>();
-		String query = "SELECT A.ID_Album, A.Title, A.Date, AO.Value FROM album AS A JOIN album_order AS AO ON A.ID_Album = AO.ID_Album WHERE AO.ID_User = ? ORDER BY AO.Value";
+		String query = "SELECT ID_Album, Title, Date, OrderValue FROM album WHERE ID_User = ? ORDER BY OrderValue ASC, Date DESC";
 		try (PreparedStatement pstatement = con.prepareStatement(query);) {
 			pstatement.setInt(1, user.getId());
 			ResultSet result = pstatement.executeQuery();
@@ -29,7 +29,7 @@ public class AlbumDAO {
 				return Collections.emptyList();
 			while (result.next()) {
 				Album album = new Album(result.getInt("ID_Album"), result.getString("Title"),
-						new Date(result.getDate("Date").getTime()), result.getInt("Value"));
+						new Date(result.getDate("Date").getTime()), result.getInt("OrderValue"));
 				myAlbums.add(album);
 			}
 			return myAlbums;
@@ -38,7 +38,7 @@ public class AlbumDAO {
 
 	public List<Album> getOtherAlbums(User excludedUser) throws SQLException {
 		List<Album> otherAlbums = new ArrayList<Album>();
-		String query = "SELECT  ID_Album, Title, Date FROM album  WHERE ID_User <> ? ORDER BY Date DESC";
+		String query = "SELECT ID_Album, Title, Date FROM album  WHERE ID_User <> ? ORDER BY Date DESC";
 		try (PreparedStatement pstatement = con.prepareStatement(query);) {
 			pstatement.setInt(1, excludedUser.getId());
 			ResultSet result = pstatement.executeQuery();
@@ -63,7 +63,6 @@ public class AlbumDAO {
 	public void newAlbum(String title, User owner, List<Integer> imageID) throws SQLException {
 		con.setAutoCommit(false);
 		int albumID;
-		int maxValue = 0;
 		String query;
 		query = "INSERT INTO album (Title, Date, ID_User) VALUES (?, CURRENT_TIMESTAMP(), ?);";
 		try (PreparedStatement pstatement = con.prepareStatement(query);) {
@@ -71,7 +70,6 @@ public class AlbumDAO {
 			pstatement.setInt(2, owner.getId());
 			pstatement.executeUpdate();
 		}
-		// TODO get last id with sql function
 		query = "SELECT MAX(ID_Album) as last from album;";
 		try (PreparedStatement pstatement = con.prepareStatement(query);) {
 			ResultSet result = pstatement.executeQuery();
@@ -87,31 +85,13 @@ public class AlbumDAO {
 			}
 			pstatement.executeBatch();
 		}
-		query = "SELECT MAX(Value) as last from album_order WHERE ID_User = ?;";
-		try (PreparedStatement pstatement = con.prepareStatement(query);) {
-			pstatement.setInt(1, owner.getId());
-			ResultSet result = pstatement.executeQuery();
-			if (!result.isBeforeFirst()) {
-				maxValue = 0;
-			} else {
-				result.next();
-				maxValue = result.getInt("last") + 1;
-			}
-		}
-		query = "INSERT INTO album_order (ID_Album, ID_User, Value) VALUES (?, ?, ?)";
-		try (PreparedStatement pstatement = con.prepareStatement(query);) {
-			pstatement.setInt(1, albumID);
-			pstatement.setInt(2, owner.getId());
-			pstatement.setInt(3, maxValue);
-			pstatement.executeUpdate();
-		}
 		con.commit();
 	}
 
 	public void changeOrder(User owner, List<Album> orderedList) throws SQLException {
 		con.setAutoCommit(false);
 		String query;
-		query = "UPDATE album_order SET Value = ? WHERE ID_Album = ? AND ID_User = ?";
+		query = "UPDATE album SET OrderValue = ? WHERE ID_Album = ? AND ID_User = ?";
 		try (PreparedStatement pstatement = con.prepareStatement(query);) {
 			pstatement.setInt(3, owner.getId());
 			for (Album a : orderedList) {

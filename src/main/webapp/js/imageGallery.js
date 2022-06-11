@@ -32,9 +32,6 @@
 			document.getElementById("CreateAlbum").addEventListener('click', _ => {
 				this.changeView(new CreateAlbum(), false);
 			});
-			document.getElementById("UploadImage").addEventListener('click', _ => {
-				// this.changeView();
-			});
 		};
 
 		this.reset = function() {
@@ -94,7 +91,7 @@
 				albumTab.appendChild(albumDate);
 
 				albumTab.addEventListener("click", _ => {
-					pageOrchestrator.changeView(new AlbumDetails(album.id));
+					pageOrchestrator.changeView(new AlbumPage(album.id));
 				});
 				// start drag event
 				albumTab.addEventListener("mousedown", (e) => {
@@ -198,89 +195,99 @@
 				container.appendChild(albumTab);
 				return albumTab;
 			} // end of append album function
-			
+
 			// if you have at least one album
+
+			// create my album containter
+			var section = document.createElement("div");
+			section.classList.add("section");
+			// set title
+			var sectionTitle = document.createElement("div");
+			sectionTitle.classList.add("sectionTitle");
+			sectionTitle.textContent = "Your Albums";
+			section.appendChild(sectionTitle);
 			if (myAlbums.length > 0) {
-				// create my album containter
-				var section = document.createElement("div");
-				section.classList.add("section");
-				// set title
-				var sectionTitle = document.createElement("div");
-				sectionTitle.classList.add("sectionTitle");
-				sectionTitle.textContent = "Your Albums";
-				section.appendChild(sectionTitle);
 				myAlbumTabs = [];
 				// add my albums to container
 				myAlbums.forEach(function(album) {
 					let myAlbumTab = appendAlbum(album, section);
 					myAlbumTabs.push(myAlbumTab);
 				});
-				// append my albums container to content
-				content.appendChild(section);
-				// make sense to reorder only if you have at least 2 albums
-				if (myAlbums.length > 1) {
-					// create change order button
-					let changeOrder = document.createElement("button");
-					changeOrder.textContent = "Change Order";
-					changeOrder.id = "changeOrder";
-					content.appendChild(changeOrder);
-					// create cancel order button
-					let cancelOrder = document.createElement("button");
-					cancelOrder.textContent = "Cancel";
-					cancelOrder.id = "cancelOrder";
-					content.appendChild(cancelOrder);
-
-					changeOrder.addEventListener("click", _ => {
-						if (editingOrder === false) {
-							changeOrder.textContent = "Save Order";
-							cancelOrder.style.display = "inline-block";
-							editingOrder = true;
-						} else {
-							editingOrder = false;
-							// send the reordered albums
-							makeCall("POST", "GetAlbums", JSON.stringify(myAlbums),
-								function success(message) {
-									alertMessage.show(message, false);
-									changeOrder.textContent = "Change Order";
-									cancelOrder.style.display = "none";
-								},
-								function error(message) {
-									alertMessage.show(message);
-									// some wrong orderValue in albums, refresh and get the old ones
-									pageOrchestrator.refresh();
-								},
-								false);
-						}
-					});
-					// cancel reordering, refresh to get back old albums order
-					cancelOrder.addEventListener("click", _ => {
-						editingOrder = false;
-						pageOrchestrator.refresh();
-					});
-				}
+			} else {
+				section.appendChild(document.createTextNode("No albums"));
 			}
+			// append my albums container to content
+			content.appendChild(section);
+			// make sense to reorder only if you have at least 2 albums
+			if (myAlbums.length > 1) {
+				// create change order button
+				let changeOrder = document.createElement("button");
+				changeOrder.textContent = "Change Order";
+				changeOrder.id = "changeOrder";
+				content.appendChild(changeOrder);
+				// create cancel order button
+				let cancelOrder = document.createElement("button");
+				cancelOrder.textContent = "Cancel";
+				cancelOrder.id = "cancelOrder";
+				content.appendChild(cancelOrder);
+
+				changeOrder.addEventListener("click", _ => {
+					if (editingOrder === false) {
+						// if first reordering orderValue is null
+						myAlbums.forEach(function(album, index) {
+							album.orderValue = index;
+						});
+						changeOrder.textContent = "Save Order";
+						cancelOrder.style.display = "inline-block";
+						editingOrder = true;
+					} else {
+						editingOrder = false;
+						// send the reordered albums
+						makeCall("POST", "GetAlbums", JSON.stringify(myAlbums),
+							function success(message) {
+								alertMessage.show(message, false);
+								changeOrder.textContent = "Change Order";
+								cancelOrder.style.display = "none";
+							},
+							function error(message) {
+								alertMessage.show(message);
+								// some wrong orderValue in albums, refresh and get the old ones
+								pageOrchestrator.refresh();
+							},
+							false);
+					}
+				});
+				// cancel reordering, refresh to get back old albums order
+				cancelOrder.addEventListener("click", _ => {
+					editingOrder = false;
+					pageOrchestrator.refresh();
+				});
+			}
+
+			// create other albums container
+			section = document.createElement("div");
+			section.classList.add("section");
+			// set title
+			sectionTitle = document.createElement("div");
+			sectionTitle.classList.add("sectionTitle");
+			sectionTitle.textContent = "Other People's Albums";
+			section.appendChild(sectionTitle);
 			// if others have at least one album
 			if (otherAlbumList.length > 0) {
-				// create other albums container
-				section = document.createElement("div");
-				section.classList.add("section");
-				// set title
-				sectionTitle = document.createElement("div");
-				sectionTitle.classList.add("sectionTitle");
-				sectionTitle.textContent = "Other People's Albums";
-				section.appendChild(sectionTitle);
 				// add other albums to container
 				otherAlbumList.forEach(function(album) {
 					appendAlbum(album, section);
 				});
-				// append other albums container to content
-				content.appendChild(section);
+			} else {
+				section.appendChild(document.createTextNode("No albums"));
 			}
+			// append other albums container to content
+			content.appendChild(section);
 		}
 	}
 
-	function AlbumDetails(_idAlbum) {
-		this.idAlbum = _idAlbum;
+	function AlbumPage(_idAlbum) {
+		let idAlbum = _idAlbum;
 		let page;
 		let images;
 		let htmlThumbnails = [];
@@ -288,7 +295,7 @@
 
 		this.start = function() {
 			let self = this;
-			makeCall("GET", "AlbumPage?album=" + self.idAlbum, null,
+			makeCall("GET", "AlbumPage?album=" + idAlbum, null,
 				function success(message) {
 					images = JSON.parse(message);
 					self.initialize();
@@ -549,6 +556,8 @@
 			imageDate.textContent = image.date;
 			imageDescription.textContent = decodeHtml(image.description);
 			imageId.value = image.id;
+			commentsContainer.textContent = "";
+			imageDetails.scrollTop = 0;
 			makeCall("GET", "ImageDetails?image=" + image.id, null,
 				function success(message) {
 					comments = JSON.parse(message);
@@ -605,7 +614,8 @@
 			formContainer.style.textAlign = "center";
 			// create title
 			let title = document.createElement("div");
-			title.classList.add("title");
+			title.classList.add("createAlbumTitle");
+			title.textContent = "Create Album";
 			formContainer.appendChild(title);
 			// album title input
 			let albumTitleInput = document.createElement("input");
@@ -632,32 +642,38 @@
 					});
 			})
 			formContainer.appendChild(submit);
-			// images div container
-			let imagesContainer = document.createElement("div");
-			imagesContainer.classList.add("images");
-			formContainer.appendChild(imagesContainer);
-			images.forEach(function(image) {
-				let imageSelection = document.createElement("div");
-				imageSelection.classList.add("imageSelection");
-				let checkBox = document.createElement("input");
-				checkBox.type = "checkbox";
-				checkBox.name = "image";
-				checkBox.value = image.id;
-				imageSelection.appendChild(checkBox);
-				// img div
-				let img = document.createElement("img");
-				img.alt = img.title;
-				img.src = "ThumbnailStreamer?image=" + image.path;
-				imageSelection.appendChild(img);
-				// image title
-				let imgTitle = document.createElement("div");
-				imgTitle.classList.add("createAlbumImageTitle");
-				imgTitle.textContent = decodeHtml(image.title);
-				imageSelection.appendChild(imgTitle);
+			if (images.length > 0) {
+				// images div container
+				let imagesContainer = document.createElement("div");
+				imagesContainer.classList.add("images");
+				formContainer.appendChild(imagesContainer);
+				images.forEach(function(image) {
+					let imageSelection = document.createElement("div");
+					imageSelection.classList.add("imageSelection");
+					let checkBox = document.createElement("input");
+					checkBox.type = "checkbox";
+					checkBox.name = "image";
+					checkBox.value = image.id;
+					imageSelection.appendChild(checkBox);
+					// img div
+					let img = document.createElement("img");
+					img.alt = img.title;
+					img.src = "ThumbnailStreamer?image=" + image.path;
+					imageSelection.appendChild(img);
+					// image title
+					let imgTitle = document.createElement("div");
+					imgTitle.classList.add("createAlbumImageTitle");
+					imgTitle.textContent = decodeHtml(image.title);
+					imageSelection.appendChild(imgTitle);
 
-				imagesContainer.appendChild(imageSelection);
-			});
-			formContainer.appendChild(imagesContainer);
+					imagesContainer.appendChild(imageSelection);
+				});
+				formContainer.appendChild(imagesContainer);
+			}
+			else {
+				formContainer.appendChild(document.createElement("br"));
+				formContainer.appendChild(document.createTextNode("No images"));
+			}
 			// open form container into a modal
 			modal.show(formContainer);
 		}

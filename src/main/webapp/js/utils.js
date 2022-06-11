@@ -14,6 +14,8 @@ function makeCall(method, url, data, successCback, errorCback, isForm = true) {
 				case 401: //unauthorized
 				case 403: // forbidden
 					window.location.href = req.getResponseHeader("Location");
+					// if here server session not set, remove also from js to prevent infinite looping
+					window.sessionStorage.removeItem('username');
 					break;
 				case 400: // bad request
 				case 500: // server error
@@ -66,7 +68,6 @@ function Message() {
 
 		function fadeOut() {
 			if (messageBox) {
-				console.log(messageBox.id);
 				messageBox.classList.remove("fadeIn");
 				messageBox.classList.add("fadeOut");
 			}

@@ -43,9 +43,10 @@ a {
 	right: 10px;
 	font-style: italic;
 }
-#cancelOrder{
-	display: none;	
-    margin: 0 10px;
+
+#cancelOrder {
+	display: none;
+	margin: 0 10px;
 }
 /* DETAILS.css */
 .imageDetails {
@@ -137,6 +138,12 @@ a {
 	max-width: 350px;
 	border-radius: 5px;
 	margin: 10px;
+}
+
+.createAlbumTitle {
+	font-size: 1.5em;
+	font-weight: bold;
+	margin-top: 20px;
 }
 
 .createAlbumImageTitle {
