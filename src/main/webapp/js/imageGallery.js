@@ -27,6 +27,7 @@
 				window.sessionStorage.removeItem('username');
 			});
 			document.getElementById("Home").addEventListener('click', _ => {
+				modal.close();
 				this.changeView(albumList);
 			});
 			document.getElementById("CreateAlbum").addEventListener('click', _ => {
@@ -196,8 +197,6 @@
 				return albumTab;
 			} // end of append album function
 
-			// if you have at least one album
-
 			// create my album containter
 			var section = document.createElement("div");
 			section.classList.add("section");
@@ -206,6 +205,8 @@
 			sectionTitle.classList.add("sectionTitle");
 			sectionTitle.textContent = "Your Albums";
 			section.appendChild(sectionTitle);
+
+			// if you have at least one album
 			if (myAlbums.length > 0) {
 				myAlbumTabs = [];
 				// add my albums to container
@@ -451,8 +452,10 @@
 		}
 
 		this.close = function() {
-			modal.style.display = "none";
-			modalContent.textContent = "";
+			if (modal) {
+				modal.style.display = "none";
+				modalContent.textContent = "";
+			}
 		}
 	}
 	function ImageDetails() {

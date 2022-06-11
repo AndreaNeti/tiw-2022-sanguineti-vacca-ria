@@ -69,7 +69,8 @@ public class ThumbnailStreamer extends HttpServlet {
 	}
 
 	private BufferedImage crop(BufferedImage source, int size) {
-		BufferedImage img = source.getSubimage(0, 0, size, size);
+		BufferedImage img = source.getSubimage((source.getWidth() - size) / 2, (source.getHeight() - size) / 2, size,
+				size);
 		BufferedImage copyOfImage = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_RGB);
 		Graphics g = copyOfImage.createGraphics();
 		g.drawImage(img, 0, 0, null);
