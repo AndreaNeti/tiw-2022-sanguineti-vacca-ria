@@ -85,14 +85,6 @@ public class CreateAlbum extends HttpServlet {
 			albumDao.newAlbum(albumName, me, selectedImageIds);
 		} catch (SQLException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (SQLException e1) {
-				e1.printStackTrace();
-				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-				response.getWriter().println("Impossible to query DB");
-				return;
-			}
 			// SQLException --> foreign key constraint violation
 			if (e.getErrorCode() == 1452) {
 				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);

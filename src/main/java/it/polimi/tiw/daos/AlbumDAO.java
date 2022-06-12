@@ -24,15 +24,16 @@ public class AlbumDAO {
 		String query = "SELECT ID_Album, Title, Date, OrderValue FROM album WHERE ID_User = ? ORDER BY OrderValue IS NULL, OrderValue ASC, Date DESC";
 		try (PreparedStatement pstatement = con.prepareStatement(query);) {
 			pstatement.setInt(1, user.getId());
-			ResultSet result = pstatement.executeQuery();
-			if (!result.isBeforeFirst()) // no results, getAlbum failed or no albums present
-				return Collections.emptyList();
-			while (result.next()) {
-				Album album = new Album(result.getInt("ID_Album"), result.getString("Title"),
-						new Date(result.getDate("Date").getTime()), result.getInt("OrderValue"));
-				myAlbums.add(album);
+			try (ResultSet result = pstatement.executeQuery();) {
+				if (!result.isBeforeFirst()) // no results, getAlbum failed or no albums present
+					return Collections.emptyList();
+				while (result.next()) {
+					Album album = new Album(result.getInt("ID_Album"), result.getString("Title"),
+							new Date(result.getDate("Date").getTime()), result.getInt("OrderValue"));
+					myAlbums.add(album);
+				}
+				return myAlbums;
 			}
-			return myAlbums;
 		}
 	}
 
@@ -41,15 +42,16 @@ public class AlbumDAO {
 		String query = "SELECT ID_Album, Title, Date FROM album  WHERE ID_User <> ? ORDER BY Date DESC";
 		try (PreparedStatement pstatement = con.prepareStatement(query);) {
 			pstatement.setInt(1, excludedUser.getId());
-			ResultSet result = pstatement.executeQuery();
-			if (!result.isBeforeFirst()) // no results, getAlbum failed or no albums present
-				return Collections.emptyList();
-			while (result.next()) {
-				Album album = new Album(result.getInt("ID_Album"), result.getString("Title"),
-						new Date(result.getDate("Date").getTime()));
-				otherAlbums.add(album);
+			try (ResultSet result = pstatement.executeQuery();) {
+				if (!result.isBeforeFirst()) // no results, getAlbum failed or no albums present
+					return Collections.emptyList();
+				while (result.next()) {
+					Album album = new Album(result.getInt("ID_Album"), result.getString("Title"),
+							new Date(result.getDate("Date").getTime()));
+					otherAlbums.add(album);
+				}
+				return otherAlbums;
 			}
-			return otherAlbums;
 		}
 	}
 
@@ -65,27 +67,35 @@ public class AlbumDAO {
 		int albumID;
 		String query;
 		query = "INSERT INTO album (Title, Date, ID_User) VALUES (?, CURRENT_TIMESTAMP(), ?);";
-		try (PreparedStatement pstatement = con.prepareStatement(query);) {
-			pstatement.setString(1, title);
-			pstatement.setInt(2, owner.getId());
-			pstatement.executeUpdate();
-		}
-		query = "SELECT MAX(ID_Album) as last from album;";
-		try (PreparedStatement pstatement = con.prepareStatement(query);) {
-			ResultSet result = pstatement.executeQuery();
-			result.next();
-			albumID = result.getInt("last");
-		}
-		query = "INSERT INTO image_album (ID_Album, ID_Image) VALUES(?, ?);";
-		try (PreparedStatement pstatement = con.prepareStatement(query);) {
-			pstatement.setInt(1, albumID);
-			for (Integer i : imageID) {
-				pstatement.setInt(2, i);
-				pstatement.addBatch();
+		try {
+			try (PreparedStatement pstatement = con.prepareStatement(query);) {
+				pstatement.setString(1, title);
+				pstatement.setInt(2, owner.getId());
+				pstatement.executeUpdate();
 			}
-			pstatement.executeBatch();
+			query = "SELECT MAX(ID_Album) as last from album;";
+			try (PreparedStatement pstatement = con.prepareStatement(query);) {
+				try (ResultSet result = pstatement.executeQuery();) {
+					result.next();
+					albumID = result.getInt("last");
+				}
+			}
+			query = "INSERT INTO image_album (ID_Album, ID_Image) VALUES(?, ?);";
+			try (PreparedStatement pstatement = con.prepareStatement(query);) {
+				pstatement.setInt(1, albumID);
+				for (Integer i : imageID) {
+					pstatement.setInt(2, i);
+					pstatement.addBatch();
+				}
+				pstatement.executeBatch();
+				con.commit();
+			}
+		} catch (SQLException e) {
+			con.rollback();
+			throw e;
+		} finally {
+			con.setAutoCommit(true);
 		}
-		con.commit();
 	}
 
 	public void changeOrder(User owner, List<Album> orderedList) throws SQLException {
@@ -100,7 +110,12 @@ public class AlbumDAO {
 				pstatement.addBatch();
 			}
 			pstatement.executeBatch();
+			con.commit();
+		} catch (SQLException e) {
+			con.rollback();
+			throw e;
+		} finally {
+			con.setAutoCommit(true);
 		}
-		con.commit();
 	}
 }

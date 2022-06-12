@@ -24,26 +24,26 @@ public class CommentDAO {
 		List<Comment> comments = new ArrayList<Comment>();
 		try (PreparedStatement pstatement = con.prepareStatement(query);) {
 			pstatement.setInt(1, imageID);
-			ResultSet result = pstatement.executeQuery();
-			if (!result.isBeforeFirst()) // no results, getImage failed
-				return Collections.emptyList();
-			while (result.next()) {
-				Comment comment = new Comment(result.getString("Text"), 
-												new Date(result.getDate("Date").getTime()),
-												result.getString("Username"));
-				comments.add(comment);
+			try (ResultSet result = pstatement.executeQuery();) {
+				if (!result.isBeforeFirst()) // no results, getImage failed
+					return Collections.emptyList();
+				while (result.next()) {
+					Comment comment = new Comment(result.getString("Text"), new Date(result.getDate("Date").getTime()),
+							result.getString("Username"));
+					comments.add(comment);
+				}
+				return comments;
 			}
-			return comments;
 		}
 	}
-	
+
 	public void insertComment(User user, int imageID, String text) throws SQLException {
 		String query = "INSERT INTO comments (ID_Image, ID_User, Text, Date) VALUES (?, ?, ?, CURRENT_TIMESTAMP())";
 		try (PreparedStatement pstatement = con.prepareStatement(query);) {
 			pstatement.setInt(1, imageID);
 			pstatement.setInt(2, user.getId());
 			pstatement.setString(3, text);
-			pstatement.executeUpdate();	
+			pstatement.executeUpdate();
 		}
 	}
 }
