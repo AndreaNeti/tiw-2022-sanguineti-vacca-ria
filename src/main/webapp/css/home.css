@@ -162,7 +162,7 @@ input[type=text] {
 .thumbnails {
 	height: calc(20vw - 44px);
 	position: relative;
-	margin: 0 50px;
+	margin: 40px 50px;
 }
 
 .thumbnail {

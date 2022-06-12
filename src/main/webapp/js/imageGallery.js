@@ -92,7 +92,7 @@
 				albumTab.appendChild(albumDate);
 
 				albumTab.addEventListener("click", _ => {
-					pageOrchestrator.changeView(new AlbumPage(album.id));
+					pageOrchestrator.changeView(new AlbumPage(album));
 				});
 				// Only myAlbums are reorderable
 				if (reorderable === true) {
@@ -289,8 +289,8 @@
 		}
 	}
 
-	function AlbumPage(_idAlbum) {
-		let idAlbum = _idAlbum;
+	function AlbumPage(_album) {
+		let album = _album;
 		let page;
 		let images;
 		let htmlThumbnails = [];
@@ -298,7 +298,7 @@
 
 		this.start = function() {
 			let self = this;
-			makeCall("GET", "AlbumPage?album=" + idAlbum, null,
+			makeCall("GET", "AlbumPage?album=" + album.id, null,
 				function success(message) {
 					images = JSON.parse(message);
 					self.initialize();
@@ -353,6 +353,11 @@
 			// called for first time, create html structure
 			if (htmlThumbnails.length === 0) {
 				imageDetails = new ImageDetails();
+				// create album title
+				let albumTitle = document.createElement("div");
+				albumTitle.classList.add("sectionTitle");
+				albumTitle.textContent = album.title;
+				content.appendChild(albumTitle);
 				// create images container
 				imagesContainer = document.createElement("div");
 				imagesContainer.classList.add("thumbnails");
