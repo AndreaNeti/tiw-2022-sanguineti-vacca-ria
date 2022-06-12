@@ -2,12 +2,6 @@
  * Register management
  */
 (function() { // avoid variables ending up in the global scope
-	// already logged
-	window.addEventListener("load", () => {
-		if (window.sessionStorage.getItem("username") != null) {
-			window.location.href = "home.html";
-		}
-	});
 	var alertMessage = new Message();
 	document.getElementById("register").addEventListener('click', (e) => {
 		let form = e.target.closest("form"); let inputs = form.elements;

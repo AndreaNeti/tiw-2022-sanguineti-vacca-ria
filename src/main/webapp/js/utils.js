@@ -12,10 +12,10 @@ function makeCall(method, url, data, successCback, errorCback, isForm = true) {
 					successCback(message);
 					break;
 				case 401: //unauthorized
-				case 403: // forbidden
-					window.location.href = req.getResponseHeader("Location");
-					// if here server session not set, remove also from js to prevent infinite looping
+				case 403: // forbidden			
+					// if server session not set, remove also from js to prevent infinite looping
 					window.sessionStorage.removeItem('username');
+					window.location.href = req.getResponseHeader("Location");
 					break;
 				case 400: // bad request
 				case 500: // server error

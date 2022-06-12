@@ -11,6 +11,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import it.polimi.tiw.beans.User;
+
 public class LoginFilter implements Filter {
 
 	@Override
@@ -22,9 +24,8 @@ public class LoginFilter implements Filter {
 		HttpSession session = req.getSession();
 		// redirect to home if already logged
 		if (!(session.isNew() || session.getAttribute("user") == null)) {
-			res.setStatus(HttpServletResponse.SC_FORBIDDEN);
-			String loginpath = req.getServletContext().getContextPath() + "/home.html";
-			res.setHeader("Location", loginpath);
+			res.setStatus(HttpServletResponse.SC_OK);
+			res.getWriter().println(((User) session.getAttribute("user")).getUsername());
 			return;
 		}
 		// pass the request along the filter chain
